@@ -1,5 +1,6 @@
 import numpy as np
 import models.activations as act
+import torch.nn as nn
 
 
 class SingleLayer:
@@ -42,3 +43,15 @@ class SingleLayer:
         # derror[batchSize, N] X[batchSize, M]
         # [batchSize, N] X[batchSize, M] -> dot([N, batchSize], X[batchSize, M]) -> [N,M]
         return np.dot(derror.T, np.concatenate((np.ones((X.shape[0], 1)), X), axis=1)) / X.shape[0]
+
+
+class LinearClassifier(nn.Module):
+        def __init__(self, n_in):
+            super(LinearClassifier, self).__init__()
+            self.lin = nn.Linear(n_in, 1)
+            self.sig = nn.Sigmoid()
+
+        def forward(self, x):
+            self.lin.weight.retain_grad()
+            out = self.lin(x)
+            return self.sig(out)
