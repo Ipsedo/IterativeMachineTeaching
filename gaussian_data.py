@@ -43,7 +43,7 @@ def gaussian_main():
         nb_correct = th.where(tmp.view(-1) == y, th.ones(1), th.zeros(1)).sum().item()
         print(nb_correct, "/", 2 * nb_data_per_class)
 
-    T = 200
+    T = 1000
 
     res_example = []
 
@@ -90,6 +90,10 @@ def gaussian_main():
         sys.stdout.write("\r" + str(t) + "/" + str(T) + ", idx=" + str(i) + " " * 100)
         sys.stdout.flush()
 
-    plt.plot(res_example, c='b')
-    plt.plot(res_student, c='r')
+    plt.plot(res_example, c='b', label="linear classifier")
+    plt.plot(res_student, c='r', label="omniscient teacher & linear classifier")
+    plt.title("Gaussian data")
+    plt.xlabel("Iteration")
+    plt.ylabel("Accuracy")
+    plt.legend()
     plt.show()
