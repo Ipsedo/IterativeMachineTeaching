@@ -2,6 +2,7 @@ import teachers.omniscient_teacher as omni
 import numpy as np
 import matplotlib.pyplot as plt
 import torch as th
+import sys
 
 if __name__ == "__main__":
     X1 = np.random.multivariate_normal([0, 0], np.identity(2), 1000)
@@ -60,7 +61,7 @@ if __name__ == "__main__":
         nb_correct = th.where(tmp.view(-1) == y, th.ones(1), th.zeros(1)).sum().item()
         print(nb_correct, "/", 2000)
 
-    T = 100
+    T = 200
 
     res_example = []
 
@@ -74,7 +75,7 @@ if __name__ == "__main__":
         nb_correct = th.where(tmp.view(-1) == y, th.ones(1), th.zeros(1)).sum().item()
         res_example.append(nb_correct / 2000)
 
-    print("Base line trained")
+    print("Base line trained\n")
 
     res_student = []
 
@@ -87,7 +88,6 @@ if __name__ == "__main__":
             scores.append(s)
 
         i = np.argmin(scores)
-        print(i)
         x_t = X[i]
         y_t = y[i]
         student.update(x_t, y_t)
@@ -96,6 +96,9 @@ if __name__ == "__main__":
         tmp = th.where(test > 0.5, th.ones(1), th.zeros(1))
         nb_correct = th.where(tmp.view(-1) == y, th.ones(1), th.zeros(1)).sum().item()
         res_student.append(nb_correct / 2000)
+
+        sys.stdout.write("\r" + str(t) + "/" + str(T) + ", idx=" + str(i) + " " * 100)
+        sys.stdout.flush()
 
     plt.plot(res_example, c='b')
     plt.plot(res_student, c='r')
