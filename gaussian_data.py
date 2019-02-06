@@ -6,11 +6,12 @@ import sys
 
 
 def gaussian_main():
-    nb_data_per_class = 2000
-    X1 = np.random.multivariate_normal([0, 0], np.identity(2), nb_data_per_class)
+    dim = 10
+    nb_data_per_class = 200
+    X1 = np.random.multivariate_normal([1.5]*dim, np.identity(dim), nb_data_per_class)
     y1 = np.ones((nb_data_per_class,))
 
-    X2 = np.random.multivariate_normal([1.8, 1.8], np.identity(2), nb_data_per_class)
+    X2 = np.random.multivariate_normal([-1.5]*dim, np.identity(dim), nb_data_per_class)
     y2 = np.zeros((nb_data_per_class,))
 
     X = np.concatenate((X1, X2), axis=0)
@@ -22,11 +23,11 @@ def gaussian_main():
     X = X[indices]
     y = y[indices]
 
-    teacher = omni.OmniscientLinearClassifier(2)
-    example = omni.OmniscientLinearClassifier(2)
-    student = omni.OmniscientLinearClassifier(2)
+    teacher = omni.OmniscientLinearClassifier(dim)
+    example = omni.OmniscientLinearClassifier(dim)
+    student = omni.OmniscientLinearClassifier(dim)
 
-    X = th.Tensor(X).view(-1, 2)
+    X = th.Tensor(X).view(-1, dim)
     y = th.Tensor(y).view(-1)
 
     batch_size = 1
@@ -42,7 +43,7 @@ def gaussian_main():
         nb_correct = th.where(tmp.view(-1) == y, th.ones(1), th.zeros(1)).sum().item()
         print(nb_correct, "/", 2 * nb_data_per_class)
 
-    T = 2000
+    T = 200
 
     res_example = []
 
