@@ -59,13 +59,13 @@ def load_mnist(fname="mnist.pkl.gz"):
     return train_set, valid_set, test_set
 
 def load_cifar10():
-    batch1 = unpickle("./cifar_10/data_batch_1")
-    batch2 = unpickle("./cifar_10/data_batch_2")
-    batch3 = unpickle("./cifar_10/data_batch_3")
-    batch4 = unpickle("./cifar_10/data_batch_4")
-    batch5 = unpickle("./cifar_10/data_batch_5")
+    batch1 = unpickle("./data/cifar-10-batches-py/data_batch_1")
+    batch2 = unpickle("./cifar-10-batches-py/data_batch_2")
+    batch3 = unpickle("./cifar-10-batches-py/data_batch_3")
+    batch4 = unpickle("./cifar-10-batches-py/data_batch_4")
+    batch5 = unpickle("./cifar-10-batches-py/data_batch_5")
 
-    test_batch = unpickle("./cifar_10/test_batch")
+    test_batch = unpickle("./cifar-10-batches-py/test_batch")
 
     data = np.vstack((batch1["data"],batch2["data"],batch3["data"],batch4["data"],batch5["data"]))
     labels = np.concatenate((batch1["labels"],batch2["labels"],batch3["labels"],batch4["labels"],batch5["labels"]))
@@ -75,6 +75,27 @@ def load_cifar10():
     
 
     return train_set,valid_set,valid_set
+
+
+def load_cifar10_2(nbbatch=5):
+    all_data = []
+    all_labels = []
+    for i in range(nbbatch):
+        data = open("./data/cifar-10-batches-py/data_batch_%s" % (i + 1), 'rb')
+        dict = pickle.load(data, encoding='bytes')
+        data = dict[b'data']
+        labels = np.asarray(dict[b'labels']).reshape((-1,1))
+        all_data.append(data)
+        all_labels.append(labels)
+    all_data = np.concatenate(all_data, axis=0)
+    all_labels = np.concatenate(all_labels, axis=0)
+    return (all_data, all_labels)
+
+def cifar10_proper_array(data):
+    all_red = data[:,:1024].reshape(-1, 32, 32)
+    all_green = data[:,1024:2048].reshape(-1, 32, 32)
+    all_blue = data[:,2048:].reshape(-1, 32, 32)
+    return np.stack([all_red, all_green, all_blue], axis=1)
 
 def load_cifar100():
     train_dataset = unpickle("./cifar_100/train")
