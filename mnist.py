@@ -50,7 +50,7 @@ def mnist_data():
             i_min = i * batch_size
             i_max = (i + 1) * batch_size
             teacher.update(X[i_min:i_max], y[i_min:i_max])
-        test = teacher(X).cpu()
+        test = teacher(X)
         tmp = th.where(test > 0.5, th.ones(1), th.zeros(1))
         nb_correct = th.where(tmp.view(-1) == y, th.ones(1), th.zeros(1)).sum().item()
         print(nb_correct, "/", X.size(0))
@@ -64,7 +64,7 @@ def mnist_data():
         data = X[i]
         label = y[i]
         example.update(data, label)
-        test = example(X).cpu()
+        test = example(X)
         tmp = th.where(test > 0.5, th.ones(1), th.zeros(1))
         nb_correct = th.where(tmp.view(-1) == y, th.ones(1), th.zeros(1)).sum().item()
         res_example.append(nb_correct / X.size(0))
@@ -86,7 +86,7 @@ def mnist_data():
         y_t = y[i]
         student.update(x_t, y_t)
 
-        test = student(X).cpu()
+        test = student(X)
         tmp = th.where(test > 0.5, th.ones(1), th.zeros(1))
         nb_correct = th.where(tmp.view(-1) == y, th.ones(1), th.zeros(1)).sum().item()
         res_student.append(nb_correct / X.size(0))
