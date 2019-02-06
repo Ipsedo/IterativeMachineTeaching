@@ -8,10 +8,10 @@ import sys
 def gaussian_main():
     dim = 10
     nb_data_per_class = 200
-    X1 = np.random.multivariate_normal([1.5]*dim, np.identity(dim), nb_data_per_class)
+    X1 = np.random.multivariate_normal([0.5]*dim, np.identity(dim), nb_data_per_class)
     y1 = np.ones((nb_data_per_class,))
 
-    X2 = np.random.multivariate_normal([-1.5]*dim, np.identity(dim), nb_data_per_class)
+    X2 = np.random.multivariate_normal([-0.5]*dim, np.identity(dim), nb_data_per_class)
     y2 = np.zeros((nb_data_per_class,))
 
     X = np.concatenate((X1, X2), axis=0)
