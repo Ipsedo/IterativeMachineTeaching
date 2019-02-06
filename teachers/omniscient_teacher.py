@@ -54,7 +54,8 @@ class OmniscientLinearClassifier(neur_net.LinearClassifier):
         self.optim.step()
 
     def example_difficulty(self, X, y):
-        #self.eval()
+        self.optim.zero_grad()
+        self.lin.weight.retain_grad()
         out = self(X)
         loss = self.loss_fn(out, y)
         loss.backward()
@@ -62,7 +63,8 @@ class OmniscientLinearClassifier(neur_net.LinearClassifier):
         return (th.norm(res) ** 2).item()
 
     def example_usefulness(self, w_star, X, y):
-        #self.eval()
+        self.optim.zero_grad()
+        self.lin.weight.retain_grad()
         out = self(X)
         loss = self.loss_fn(out, y)
         loss.backward()
@@ -75,7 +77,9 @@ class OmniscientConvClassifier(neur_net.ConvolutionClassifier):
     def __init__(self):
         super(OmniscientConvClassifier, self).__init__()
         self.loss_fn = nn.MSELoss()
-        self.eta = 1e-3
+        self.loss_fn.cuda()
+        self.cuda()
+        self.eta = 1e-2
         self.optim = th.optim.SGD(self.parameters(), lr=self.eta)
 
     def update(self, X, y):
@@ -87,6 +91,8 @@ class OmniscientConvClassifier(neur_net.ConvolutionClassifier):
         self.optim.step()
 
     def example_difficulty(self, X, y):
+        self.optim.zero_grad()
+        self.lin.weight.retain_grad()
         out = self(X)
         loss = self.loss_fn(out, y)
         loss.backward()
@@ -94,6 +100,8 @@ class OmniscientConvClassifier(neur_net.ConvolutionClassifier):
         return (th.norm(res) ** 2).item()
 
     def example_usefulness(self, w_star, X, y):
+        self.optim.zero_grad()
+        self.lin.weight.retain_grad()
         out = self(X)
         loss = self.loss_fn(out, y)
         loss.backward()

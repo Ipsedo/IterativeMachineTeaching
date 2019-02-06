@@ -52,9 +52,9 @@ class LinearClassifier(nn.Module):
             self.sig = nn.Sigmoid()
 
         def forward(self, x):
-            self.lin.weight.retain_grad()
             out = self.lin(x)
             return self.sig(out)
+
 
 # shape pour MNIST /!\
 class ConvolutionClassifier(nn.Module):
@@ -62,15 +62,12 @@ class ConvolutionClassifier(nn.Module):
         super(ConvolutionClassifier, self).__init__()
         self.seq = nn.Sequential(nn.Conv2d(1, 8, kernel_size=(3, 3)),
                                  nn.MaxPool2d((3, 3)),
-                                 nn.ReLU(),
-                                 nn.Conv2d(8, 16, kernel_size=(3, 3)),
-                                 nn.MaxPool2d((5, 5)),
                                  nn.ReLU())
 
-        self.lin = nn.Linear(16, 1)
+        self.lin = nn.Linear(512, 1)
         self.sig = nn.Sigmoid()
 
     def forward(self, x):
-        out = self.seq(x)
+        out = self.seq(x).view(-1, 8 * 8 * 8)
         out = self.lin(out)
         return self.sig(out)
