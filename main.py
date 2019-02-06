@@ -3,22 +3,53 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch as th
 import sys
+import data.dataset_loader as dataset_loader
+from sklearn.decomposition import PCA
 
 if __name__ == "__main__":
-    X1 = np.random.multivariate_normal([0, 0], np.identity(2), 1000)
-    y1 = np.ones((1000,))
+    # X1 = np.random.multivariate_normal([0, 0], np.identity(2), 1000)
+    # y1 = np.ones((1000,))
 
-    X2 = np.random.multivariate_normal([1.4, 1.4], np.identity(2), 1000)
-    y2 = np.zeros((1000,))
+    # X2 = np.random.multivariate_normal([1.4, 1.4], np.identity(2), 1000)
+    # y2 = np.zeros((1000,))
 
-    X = np.concatenate((X1, X2), axis=0)
-    y = np.concatenate((y1, y2), axis=0)
+    # X = np.concatenate((X1, X2), axis=0)
+    # y = np.concatenate((y1, y2), axis=0)
 
-    indices = np.indices((2000,))
-    np.random.shuffle(indices)
+    # indices = np.indices((2000,))
+    # np.random.shuffle(indices)
 
-    X = X[indices]
-    y = y[indices]
+    # X = X[indices]
+    # y = y[indices]
+
+    mnistfile="./data/mnist.pkl.gz"
+    train_set, valid_set, test_set = dataset_loader.load_mnist(mnistfile)
+
+    X_train = np.asarray(train_set[0])
+    Y_train = np.asarray(train_set[1])
+
+    # Traitement PCA pour obtenir 24 composantes
+    # pca = PCA(n_components = 24)
+    # pca.fit(X_train)
+    # X_train = pca.transform(X_train)
+
+    print(X_train.shape)
+    print(Y_train.shape)
+
+    X = X_train[Y_train <= 1]
+    y = Y_train[Y_train <= 1]
+
+    X = X[:2000]
+    y = y[:2000]
+
+    randomize = np.arange(X.shape[0])
+    np.random.shuffle(randomize)
+    X = X[randomize]
+    y = y[randomize]
+
+    print(X.shape)
+    print(y.shape)
+
 
     # On entraine le teacher
     """
@@ -44,12 +75,17 @@ if __name__ == "__main__":
             omni_sl.step(gbw)
     print(omni_sl.example_difficulty(X[None, 0], y[None, 0]))
     """
-    teacher = omni.OmniscientLinearClassifier(2)
-    example = omni.OmniscientLinearClassifier(2)
-    student = omni.OmniscientLinearClassifier(2)
+    teacher = omni.OmniscientLinearClassifier(784)
+    example = omni.OmniscientLinearClassifier(784)
+    student = omni.OmniscientLinearClassifier(784)
 
-    X = th.Tensor(X).view(-1, 2)
+    X = th.Tensor(X)
     y = th.Tensor(y).view(-1)
+
+    print(X.size())
+    print(y.size())
+
+    print(y)
 
     for e in range(30):
         for i in range(200):
@@ -59,21 +95,21 @@ if __name__ == "__main__":
         test = teacher(X)
         tmp = th.where(test > 0.5, th.ones(1), th.zeros(1))
         nb_correct = th.where(tmp.view(-1) == y, th.ones(1), th.zeros(1)).sum().item()
-        print(nb_correct, "/", 2000)
+        print(nb_correct, "/", X.size(0))
 
     T = 200
 
     res_example = []
 
     for t in range(T):
-        i = th.randint(0, 2000, size=(1,)).item()
+        i = th.randint(0, X.size(0), size=(1,)).item()
         data = X[i]
         label = y[i]
         example.update(data, label)
         test = example(X)
         tmp = th.where(test > 0.5, th.ones(1), th.zeros(1))
         nb_correct = th.where(tmp.view(-1) == y, th.ones(1), th.zeros(1)).sum().item()
-        res_example.append(nb_correct / 2000)
+        res_example.append(nb_correct / X.size(0))
 
     print("Base line trained\n")
 
@@ -95,7 +131,7 @@ if __name__ == "__main__":
         test = student(X)
         tmp = th.where(test > 0.5, th.ones(1), th.zeros(1))
         nb_correct = th.where(tmp.view(-1) == y, th.ones(1), th.zeros(1)).sum().item()
-        res_student.append(nb_correct / 2000)
+        res_student.append(nb_correct / X.size(0))
 
         sys.stdout.write("\r" + str(t) + "/" + str(T) + ", idx=" + str(i) + " " * 100)
         sys.stdout.flush()
@@ -103,3 +139,11 @@ if __name__ == "__main__":
     plt.plot(res_example, c='b')
     plt.plot(res_student, c='r')
     plt.show()
+
+
+
+
+
+
+
+

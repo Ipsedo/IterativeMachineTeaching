@@ -42,7 +42,7 @@ class OmniscientLinearClassifier(neur_net.LinearClassifier):
     def __init__(self, n_in):
         super(OmniscientLinearClassifier, self).__init__(n_in)
         self.loss_fn = nn.MSELoss()
-        self.eta = 2e-2
+        self.eta = 1e-2
         self.optim = th.optim.SGD(self.parameters(), lr=self.eta)
 
     def update(self, X, y):
