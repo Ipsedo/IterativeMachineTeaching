@@ -10,7 +10,7 @@ def gaussian_main():
     X1 = np.random.multivariate_normal([0, 0], np.identity(2), nb_data_per_class)
     y1 = np.ones((nb_data_per_class,))
 
-    X2 = np.random.multivariate_normal([1.2, 1.2], np.identity(2), nb_data_per_class)
+    X2 = np.random.multivariate_normal([1.8, 1.8], np.identity(2), nb_data_per_class)
     y2 = np.zeros((nb_data_per_class,))
 
     X = np.concatenate((X1, X2), axis=0)
@@ -29,7 +29,7 @@ def gaussian_main():
     X = th.Tensor(X).view(-1, 2)
     y = th.Tensor(y).view(-1)
 
-    batch_size = 10
+    batch_size = 1
     nb_batch = int(2 * nb_data_per_class / batch_size)
 
     for e in range(30):
@@ -42,7 +42,7 @@ def gaussian_main():
         nb_correct = th.where(tmp.view(-1) == y, th.ones(1), th.zeros(1)).sum().item()
         print(nb_correct, "/", 2 * nb_data_per_class)
 
-    T = 200
+    T = 2000
 
     res_example = []
 
