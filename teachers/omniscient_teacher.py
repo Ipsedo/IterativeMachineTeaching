@@ -42,7 +42,7 @@ class OmniscientLinearClassifier(neur_net.LinearClassifier):
     def __init__(self, n_in):
         super(OmniscientLinearClassifier, self).__init__(n_in)
         self.loss_fn = nn.MSELoss()
-        self.eta = 1e-1
+        self.eta = 1e-2
         self.optim = th.optim.SGD(self.parameters(), lr=self.eta)
 
     def update(self, X, y):
@@ -54,7 +54,7 @@ class OmniscientLinearClassifier(neur_net.LinearClassifier):
         self.optim.step()
 
     def example_difficulty(self, X, y):
-        self.eval()
+        #self.eval()
         out = self(X)
         loss = self.loss_fn(out, y)
         loss.backward()
@@ -62,7 +62,7 @@ class OmniscientLinearClassifier(neur_net.LinearClassifier):
         return (th.norm(res) ** 2).item()
 
     def example_usefulness(self, w_star, X, y):
-        self.eval()
+        #self.eval()
         out = self(X)
         loss = self.loss_fn(out, y)
         loss.backward()
