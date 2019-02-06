@@ -54,7 +54,7 @@ class OmniscientLinearClassifier(neur_net.LinearClassifier):
         self.optim.step()
 
     def example_difficulty(self, X, y):
-        self.eval()
+        #self.eval()
         out = self(X)
         loss = self.loss_fn(out, y)
         loss.backward()
@@ -62,7 +62,7 @@ class OmniscientLinearClassifier(neur_net.LinearClassifier):
         return (th.norm(res) ** 2).item()
 
     def example_usefulness(self, w_star, X, y):
-        self.eval()
+        #self.eval()
         out = self(X)
         loss = self.loss_fn(out, y)
         loss.backward()
