@@ -95,7 +95,10 @@ def cifar10_proper_array(data):
     all_red = data[:,:1024].reshape(-1, 32, 32)
     all_green = data[:,1024:2048].reshape(-1, 32, 32)
     all_blue = data[:,2048:].reshape(-1, 32, 32)
-    return np.stack([all_red, all_green, all_blue], axis=1)
+    return np.stack([all_red, all_green, all_blue], axis=1) / 255.0
+
+def cifar10_dictclass():
+    return {0:"airplane", 1:"automobile", 2:"bird", 3:"cat", 4:"deer", 5:"dog", 6:"frog", 7:"horse", 8:"ship", 9:"truck"}
 
 def load_cifar100():
     train_dataset = unpickle("./cifar_100/train")
