@@ -76,12 +76,12 @@ class OmniscientLinearClassifier(neur_net.LinearClassifier):
 
 
 class OmniscientConvClassifier(neur_net.ConvModel):
-    def __init__(self):
+    def __init__(self, eta):
         super(OmniscientConvClassifier, self).__init__()
         self.loss_fn = nn.MSELoss()
         self.loss_fn.cuda()
         self.cuda()
-        self.eta = 5e-2
+        self.eta = eta
         self.optim = th.optim.SGD(self.parameters(), lr=self.eta)
 
     def update(self, X, y):
