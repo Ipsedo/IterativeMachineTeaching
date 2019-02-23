@@ -4,14 +4,16 @@ import teachers.omniscient_teacher as omni
 import numpy as np
 import torch as th
 import sys
+from tqdm import tqdm
+import copy
 
 
 def cifar10_main():
     data, labels = data_loader.load_cifar10_2()
     labels = labels.reshape(-1)
 
-    nb_example = 2000
-    nb_test = 1000
+    nb_example = 9000
+    nb_test = 500
 
     class_1 = 5
     class_2 = 9
@@ -33,20 +35,20 @@ def cifar10_main():
     print(data.shape)
     print(labels.shape)
 
-    teacher = omni.OmniscientConvClassifier()
-    example = omni.OmniscientConvClassifier()
-    student = omni.OmniscientConvClassifier()
+    teacher = omni.OmniscientConvClassifier(2e-3)
 
     X = th.Tensor(data[:nb_example])
     y = th.Tensor(labels[:nb_example]).view(-1)
     X_test = th.Tensor(data[nb_example:nb_example+nb_test])
     y_test = th.Tensor(labels[nb_example:nb_example+nb_test]).view(-1)
     print(X_test.size())
+    sys.stdout.flush()
 
-    batch_size = 1
+    batch_size = 32
     nb_batch = int(nb_example / batch_size)
 
-    for e in range(10):
+    accuracies = []
+    for _ in tqdm(range(100)):
         for i in range(nb_batch):
             i_min = i * batch_size
             i_max = (i + 1) * batch_size
@@ -55,9 +57,33 @@ def cifar10_main():
         test = teacher(X_test.cuda()).cpu()
         tmp = th.where(test > 0.5, th.ones(1), th.zeros(1))
         nb_correct = th.where(tmp.view(-1) == y_test, th.ones(1), th.zeros(1)).sum().item()
-        print(nb_correct, "/", X_test.size(0))
+        accuracies.append(nb_correct / X_test.size(0))
 
-    T = 100
+    plt.plot(accuracies, c="b", label="Teacher (CNN)")
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracy")
+    plt.legend()
+    plt.show()
+
+    example = copy.deepcopy(teacher)
+    student = copy.deepcopy(teacher)
+
+    th.nn.init.xavier_uniform_(example.lin.weight)
+    example.optim = th.optim.SGD(example.lin.parameters(), lr=example.eta)
+
+    th.nn.init.xavier_uniform_(student.lin.weight)
+    student.optim = th.optim.SGD(student.lin.parameters(), lr=student.eta)
+
+    T = 400
+
+    nb_example = 200
+    X = th.Tensor(data[:nb_example])
+    y = th.Tensor(labels[:nb_example]).view(-1)
+    X_test = th.Tensor(data[nb_example:nb_example + nb_test])
+    y_test = th.Tensor(labels[nb_example:nb_example + nb_test]).view(-1)
+
+    batch_size = 1
+    nb_batch = int(nb_example / batch_size)
 
     res_example = []
 
@@ -66,10 +92,10 @@ def cifar10_main():
         i_min = i * batch_size
         i_max = (i + 1) * batch_size
 
-        data = X[i_min:i_max].cuda()
-        label = y[i_min:i_max].cuda()
+        x_b = X[i_min:i_max].cuda()
+        y_b = y[i_min:i_max].cuda()
 
-        example.update(data, label)
+        example.update(x_b, y_b)
 
         test = example(X_test.cuda()).cpu()
         tmp = th.where(test > 0.5, th.ones(1), th.zeros(1))
@@ -81,20 +107,25 @@ def cifar10_main():
     res_student = []
 
     for t in range(T):
-        scores = []
+        min_score = sys.maxsize
+        idx_min = 0
         for i in range(nb_batch):
             i_min = i * batch_size
             i_max = (i + 1) * batch_size
-            data = X[i_min:i_max].cuda()
-            label = y[i_min:i_max].cuda()
+
+            x_b = X[i_min:i_max].cuda()
+            y_b = y[i_min:i_max].cuda()
 
             eta = student.optim.param_groups[-1]["lr"]
 
-            s = (eta ** 2) * student.example_difficulty(data, label)
-            s -= eta * 2 * student.example_usefulness(teacher.lin.weight, data, label)
-            scores.append(s)
+            s = (eta ** 2) * student.example_difficulty(x_b, y_b)
+            s -= eta * 2 * student.example_usefulness(teacher.lin.weight, x_b, y_b)
 
-        i = np.argmin(scores)
+            if min_score > s:
+                min_score = s
+                idx_min = i
+
+        i = idx_min
 
         i_min = i * batch_size
         i_max = (i + 1) * batch_size
@@ -110,7 +141,7 @@ def cifar10_main():
         nb_correct = th.where(tmp.view(-1) == y_test, th.ones(1), th.zeros(1)).sum().item()
         res_student.append(nb_correct / X_test.size(0))
 
-        sys.stdout.write("\r" + str(t) + "/" + str(T) + ", idx=" + str(i) + " " * 100)
+        sys.stdout.write("\r" + str(t) + "/" + str(T) + ", idx=" + str(i) + " " * 10)
         sys.stdout.flush()
 
     d = data_loader.cifar10_dictclass()
