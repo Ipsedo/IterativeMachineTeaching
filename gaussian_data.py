@@ -106,12 +106,16 @@ def gaussian_omniscient_main():
     plt.show()
 
 
-def gaussian_surrogate_main():
+def gaussian_surrogate_main(is_same_feature_space):
     dim = 10
     nb_data_per_class = 400
     X, y = init_data(dim, nb_data_per_class)
 
-    teacher = surro.SurrogateLinearClassifier(10)
+    dim_teacher = 5
+    proj_mat = th.rand(dim, dim_teacher)
+    if is_same_feature_space:
+        dim_teacher = dim
+    teacher = surro.SurrogateLinearClassifier(dim_teacher)
     example = surro.SurrogateLinearClassifier(10)
     student = surro.SurrogateLinearClassifier(10)
 
@@ -125,8 +129,14 @@ def gaussian_surrogate_main():
         for i in range(nb_batch):
             i_min = i * batch_size
             i_max = (i + 1) * batch_size
-            teacher.update(X[i_min:i_max], y[i_min:i_max])
-        test = teacher(X)
+            if is_same_feature_space:
+                teacher.update(X[i_min:i_max], y[i_min:i_max])
+            else:
+                teacher.update(th.matmul(X[i_min:i_max], proj_mat), y[i_min:i_max])
+        if is_same_feature_space:
+            test = teacher(X)
+        else:
+            test = teacher(th.matmul(X, proj_mat))
         tmp = th.where(test > 0.5, th.ones(1), th.zeros(1))
         nb_correct = th.where(tmp.view(-1) == y, th.ones(1), th.zeros(1)).sum().item()
         print(nb_correct, "/", 2 * nb_data_per_class)
@@ -160,7 +170,10 @@ def gaussian_surrogate_main():
             label = y[i_min:i_max]
             eta = student.optim.param_groups[0]["lr"]
             s = (eta ** 2) * student.example_difficulty(data, label)
-            loss_teacher = teacher.loss_fn(teacher(data), label)
+            if is_same_feature_space:
+                loss_teacher = teacher.loss_fn(teacher(data), label)
+            else:
+                loss_teacher = teacher.loss_fn(teacher(th.matmul(data, proj_mat)), label)
             s -= eta * 2 * student.example_usefulness(loss_teacher, data, label)
             scores.append(s)
 
@@ -179,8 +192,9 @@ def gaussian_surrogate_main():
         sys.stdout.write("\r" + str(t) + "/" + str(T) + ", idx=" + str(i) + " " * 100)
         sys.stdout.flush()
 
+    descr_ft_space = "same" if is_same_feature_space else "different"
     plt.plot(res_example, c='b', label="linear classifier")
-    plt.plot(res_student, c='r', label="surrogate teacher & linear classifier (same feature space)")
+    plt.plot(res_student, c='r', label="surrogate teacher & linear classifier (" + descr_ft_space + " feature space)")
     plt.title("Gaussian data")
     plt.xlabel("Iteration")
     plt.ylabel("Accuracy")

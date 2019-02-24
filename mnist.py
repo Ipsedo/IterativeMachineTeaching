@@ -4,7 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch as th
 import sys
-from sklearn.decomposition import PCA
 import data.dataset_loader as dataset_loader
 
 
@@ -17,11 +16,6 @@ def mnist_data_omniscient():
 
     X_train = np.asarray(train_set[0])
     Y_train = np.asarray(train_set[1])
-
-    # Traitement PCA pour obtenir 24 composantes
-    # pca = PCA(n_components = 24)
-    # pca.fit(X_train)
-    # X_train = pca.transform(X_train)
 
     class_1 = 1
     class_2 = 7
@@ -122,7 +116,7 @@ def mnist_data_omniscient():
     plt.show()
 
 
-def mnist_data_surrogate():
+def mnist_data_surrogate(is_same_feature_space):
     nb_example = 5000
     nb_test = 1000
 
@@ -131,11 +125,6 @@ def mnist_data_surrogate():
 
     X_train = np.asarray(train_set[0])
     Y_train = np.asarray(train_set[1])
-
-    # Traitement PCA pour obtenir 24 composantes
-    # pca = PCA(n_components = 24)
-    # pca.fit(X_train)
-    # X_train = pca.transform(X_train)
 
     class_1 = 1
     class_2 = 7
@@ -159,7 +148,12 @@ def mnist_data_surrogate():
     batch_size = 5
     nb_batch = int(nb_example / batch_size)
 
-    teacher = surro.SurrogateLinearClassifier(784)
+    dim_teacher = 24
+    proj_mat = th.randn(784, dim_teacher)
+    if is_same_feature_space:
+        dim_teacher = 784
+
+    teacher = surro.SurrogateLinearClassifier(dim_teacher)
     example = surro.SurrogateLinearClassifier(784)
     student = surro.SurrogateLinearClassifier(784)
 
@@ -172,8 +166,17 @@ def mnist_data_surrogate():
         for i in range(nb_batch):
             i_min = i * batch_size
             i_max = (i + 1) * batch_size
-            teacher.update(X_train[i_min:i_max], y_train[i_min:i_max])
-        test = teacher(X_test)
+
+            if is_same_feature_space:
+                teacher.update(X_train[i_min:i_max], y_train[i_min:i_max])
+            else:
+                teacher.update(th.matmul(X_train[i_min:i_max], proj_mat), y_train[i_min:i_max])
+
+        if is_same_feature_space:
+            test = teacher(X_test)
+        else:
+            test = teacher(th.matmul(X_test, proj_mat))
+
         tmp = th.where(test > 0.5, th.ones(1), th.zeros(1))
         nb_correct = th.where(tmp.view(-1) == y_test, th.ones(1), th.zeros(1)).sum().item()
         print(nb_correct, "/", X_test.size(0))
@@ -207,7 +210,10 @@ def mnist_data_surrogate():
             label = y_train[i_min:i_max]
             eta = student.optim.param_groups[0]["lr"]
             s = (eta ** 2) * student.example_difficulty(data, label)
-            loss_teacher = teacher.loss_fn(teacher(data), label)
+            if is_same_feature_space:
+                loss_teacher = teacher.loss_fn(teacher(data), label)
+            else:
+                loss_teacher = teacher.loss_fn(teacher(th.matmul(data, proj_mat)), label)
             s -= eta * 2 * student.example_usefulness(loss_teacher, data, label)
             scores.append(s)
 
@@ -228,8 +234,9 @@ def mnist_data_surrogate():
         sys.stdout.write("\r" + str(t) + "/" + str(T) + ", idx=" + str(i) + " " * 100)
         sys.stdout.flush()
 
+    descr_ft_space = "same" if is_same_feature_space else "different"
     plt.plot(res_example, c='b', label="linear classifier")
-    plt.plot(res_student, c='r', label="surrogate teacher & linear classifier (same feature space)")
+    plt.plot(res_student, c='r', label="surrogate teacher & linear classifier (" + descr_ft_space + " feature space)")
     plt.title("MNIST Linear model (class : " + str(class_1) + ", " + str(class_2) + ")")
     plt.xlabel("Iteration")
     plt.ylabel("Accuracy")
