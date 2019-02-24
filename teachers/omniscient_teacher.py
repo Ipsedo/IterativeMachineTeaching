@@ -5,6 +5,7 @@ import torch as th
 import numpy as np
 
 
+"""
 class OmniscientLinearRegression(lin.LinearRegression):
     def __init__(self):
         super(OmniscientLinearRegression, self).__init__()
@@ -36,6 +37,7 @@ class OmniscientSingleLayer(neur_net.SingleLayer):
         gwb = self.compute_gradient(X, y)
         diff = self.weights - w_star
         return np.dot(diff.T, gwb)
+"""
 
 
 class OmniscientLinearClassifier(neur_net.LinearClassifier):
