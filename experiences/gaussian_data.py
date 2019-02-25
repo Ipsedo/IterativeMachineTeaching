@@ -31,25 +31,22 @@ def gaussian_main(teacher_type):
 
     X, y = init_data(dim, nb_data_per_class)
 
+    example = utils.BaseLinear(dim)
     if teacher_type == "omni":
         teacher = omni.OmniscientLinearTeacher(dim)
-        example = utils.BaseLinear(dim)
         student = omni.OmniscientLinearStudent(dim)
         teacher_name = "omniscient teacher"
     elif teacher_type == "surro_same":
         teacher = surro.SurrogateLinearTeacher(dim)
-        example = utils.BaseLinear(dim)
         student = surro.SurrogateLinearStudent(dim)
         teacher_name = "surrogate teacher (same feature space)"
     elif teacher_type == "surro_diff":
         teacher = surro.SurrogateDiffLinearTeacher(dim, 5, normal_dist=False)
-        example = utils.BaseLinear(dim)
         student = surro.SurrogateLinearStudent(dim)
         teacher_name = "surrogate teacher (different feature space)"
     else:
         print("Unrecognized teacher, starting omniscient teacher as default")
         teacher = omni.OmniscientLinearTeacher(dim)
-        example = utils.BaseLinear(dim)
         student = omni.OmniscientLinearStudent(dim)
         teacher_name = "omniscient teacher"
 
