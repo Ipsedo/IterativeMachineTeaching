@@ -1,6 +1,7 @@
 import data.dataset_loader as data_loader
 import matplotlib.pyplot as plt
 import teachers.omniscient_teacher as omni
+import teachers.surrogate_teacher as surro
 import teachers.utils as utils
 import numpy as np
 import torch as th
@@ -9,7 +10,7 @@ from tqdm import tqdm
 import copy
 
 
-def cifar10_main():
+def cifar10_main(teacher_type):
     data, labels = data_loader.load_cifar10_2()
     labels = labels.reshape(-1)
 
@@ -36,7 +37,19 @@ def cifar10_main():
     print(data.shape)
     print(labels.shape)
 
-    teacher = omni.OmniscientConvTeacher(2e-3)
+    if teacher_type == "omni":
+        teacher = omni.OmniscientConvTeacher(2e-3)
+        teacher_name = "omniscient teacher"
+    elif teacher_type == "surro_same":
+        teacher = surro.SurrogateConvTeacher(2e-3)
+        teacher_name = "surrogate teacher (same feature space)"
+    elif teacher_type == "surro_diff":
+        print("Unsuported teacher for CIFAR-10 !")
+        sys.exit()
+    else:
+        print("Unrecognized teacher, starting omniscient teacher as default")
+        teacher = omni.OmniscientConvTeacher(2e-3)
+        teacher_name = "omniscient teacher"
 
     X = th.Tensor(data[:nb_example])
     y = th.Tensor(labels[:nb_example]).view(-1)
@@ -66,14 +79,23 @@ def cifar10_main():
     plt.legend()
     plt.show()
 
+    if teacher_type == "omni":
+        student = omni.OmniscientConvStudent(2e-3)
+    elif teacher_type == "surro_same":
+        student = surro.SurrogateConvStudent(2e-3)
+    elif teacher_type == "surro_diff":
+        print("Unsuported teacher for CIFAR-10 !")
+        sys.exit()
+    else:
+        print("Unrecognized teacher, starting omniscient teacher as default")
+        student = omni.OmniscientConvStudent(2e-3)
+
     example = utils.BaseConv(2e-3)
     example.seq = copy.deepcopy(teacher.seq)
 
-    student = omni.OmniscientConvStudent(2e-3)
     student.seq = copy.deepcopy(teacher.seq)
 
     example.optim = th.optim.SGD(example.lin.parameters(), lr=example.eta)
-
     student.optim = th.optim.SGD(student.lin.parameters(), lr=student.eta)
 
     T = 400
@@ -130,7 +152,7 @@ def cifar10_main():
 
     d = data_loader.cifar10_dictclass()
     plt.plot(res_example, c='b', label="CNN")
-    plt.plot(res_student, c='r', label="omniscient teacher & CNN")
+    plt.plot(res_student, c='r', label="%s & CNN" % teacher_name)
     plt.title("Cifar10 CNN (class : " + d[class_1] + ", " + d[class_2] + ")")
     plt.xlabel("Iteration")
     plt.ylabel("Accuracy")

@@ -7,19 +7,9 @@ import sys
 if __name__ == "__main__":
 
     if sys.argv[1] == "gaussian":
-        if sys.argv[2] == "omni":
-            gaussian_data.gaussian_omniscient_main()
-        elif sys.argv[2] == "surro_same":
-            gaussian_data.gaussian_surrogate_main(True)
-        elif sys.argv[2] == "surro_diff":
-            gaussian_data.gaussian_surrogate_main(False)
+        gaussian_data.gaussian_main(sys.argv[2])
     elif sys.argv[1] == "mnist":
-        if sys.argv[2] == "omni":
-            mnist.mnist_data_omniscient()
-        elif sys.argv[2] == "surro_same":
-            mnist.mnist_data_surrogate(True)
-        elif sys.argv[2] == "surro_diff":
-            mnist.mnist_data_surrogate(False)
+        mnist.mnist_main(sys.argv[2])
     elif sys.argv[1] == "cifar":
-        cifar10.cifar10_main()
+        cifar10.cifar10_main(sys.argv[2])
 
