@@ -68,6 +68,6 @@ class OmniscientLinearTeacher(BaseLinear):
         return __select_example__(self, student, X, y, batch_size)
 
 
-class OmniscientConvTeacher(BaseLinear):
+class OmniscientConvTeacher(BaseConv):
     def select_example(self, student, X, y, batch_size):
         return __select_example__(self, student, X, y, batch_size)
