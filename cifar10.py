@@ -109,7 +109,7 @@ def cifar10_main():
     res_student = []
 
     for t in range(T):
-        i = teacher.select_example(student, X, y, batch_size)
+        i = teacher.select_example(student, X.cuda(), y.cuda(), batch_size)
 
         i_min = i * batch_size
         i_max = (i + 1) * batch_size
