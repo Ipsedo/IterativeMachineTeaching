@@ -1,116 +1,73 @@
-import sklearn.linear_model as lin
-import models.neural_network as neur_net
-import torch.nn as nn
+from teachers.utils import *
 import torch as th
-import numpy as np
+import sys
 
 
-"""
-class OmniscientLinearRegression(lin.LinearRegression):
-    def __init__(self):
-        super(OmniscientLinearRegression, self).__init__()
+def __example_difficulty__(student, X, y):
+    student.train()
+    student.optim.zero_grad()
+    student.lin.weight.retain_grad()
+    out = student(X)
+    loss = student.loss_fn(out, y)
+    loss.backward()
+    res = student.lin.weight.grad
+    return (th.norm(res) ** 2).item()
 
+
+def __example_usefulness__(student, w_star, X, y):
+    student.train()
+    student.optim.zero_grad()
+    student.lin.weight.retain_grad()
+    out = student(X)
+    loss = student.loss_fn(out, y)
+    loss.backward()
+    res = student.lin.weight.grad
+    diff = student.lin.weight - w_star
+    return th.dot(diff.view(-1), res.view(-1)).item()
+
+
+def __select_example__(teacher, student, X, y, batch_size):
+    nb_example = X.size(0)
+    nb_batch = int(nb_example / batch_size)
+
+    min_score = sys.float_info.max
+    arg_min = 0
+    for i in range(nb_batch):
+        i_min = i * batch_size
+        i_max = (i + 1) * batch_size
+        data = X[i_min:i_max]
+        label = y[i_min:i_max]
+        eta = student.optim.param_groups[0]["lr"]
+        s = (eta ** 2) * student.example_difficulty(data, label)
+        s -= eta * 2 * student.example_usefulness(teacher.lin.weight, data, label)
+        if s < min_score:
+            min_score = s
+            arg_min = i
+
+    return arg_min
+
+
+class OmniscientLinearStudent(BaseLinear):
     def example_difficulty(self, X, y):
-        return (np.dot(self.coef_, X) - y) ** 2
-
-    def example_usefulness(self):
-        return None
-
-
-class OmniscientSGDClassifier(lin.SGDClassifier):
-    def __init__(self):
-        super(OmniscientSGDClassifier, self).__init__()
-
-    def example_difficulty(self, X, y):
-        pass
-
-
-class OmniscientSingleLayer(neur_net.SingleLayer):
-    def __init__(self, n_in, n_out):
-        super(OmniscientSingleLayer, self).__init__(n_in, n_out)
-
-    def example_difficulty(self, X, y):
-        gwb = self.compute_gradient(X, y)
-        return np.linalg.norm(gwb) ** 2
-
-    def example_use_fullness(self, w_star, X, y):
-        gwb = self.compute_gradient(X, y)
-        diff = self.weights - w_star
-        return np.dot(diff.T, gwb)
-"""
-
-
-class OmniscientLinearClassifier(neur_net.LinearClassifier):
-    def __init__(self, n_in):
-        super(OmniscientLinearClassifier, self).__init__(n_in)
-        self.loss_fn = nn.MSELoss()
-        self.eta = 1e-3
-        self.optim = th.optim.SGD(self.parameters(), lr=self.eta)
-
-    def update(self, X, y):
-        self.train()
-        self.optim.zero_grad()
-        out = self(X)
-        loss = self.loss_fn(out, y)
-        loss.backward()
-        self.optim.step()
-
-    def example_difficulty(self, X, y):
-        self.train()
-        self.optim.zero_grad()
-        self.lin.weight.retain_grad()
-        out = self(X)
-        loss = self.loss_fn(out, y)
-        loss.backward()
-        res = self.lin.weight.grad
-        return (th.norm(res) ** 2).item()
+        return __example_difficulty__(self, X, y)
 
     def example_usefulness(self, w_star, X, y):
-        self.train()
-        self.optim.zero_grad()
-        self.lin.weight.retain_grad()
-        out = self(X)
-        loss = self.loss_fn(out, y)
-        loss.backward()
-        res = self.lin.weight.grad
-        diff = self.lin.weight - w_star
-        return th.dot(diff.view(-1), res.view(-1)).item()
+        return __example_usefulness__(self, w_star, X, y)
 
 
-class OmniscientConvClassifier(neur_net.ConvModel):
-    def __init__(self, eta):
-        super(OmniscientConvClassifier, self).__init__()
-        self.loss_fn = nn.MSELoss()
-        self.loss_fn.cuda()
-        self.cuda()
-        self.eta = eta
-        self.optim = th.optim.SGD(self.parameters(), lr=self.eta)
-
-    def update(self, X, y):
-        self.train()
-        self.optim.zero_grad()
-        out = self(X)
-        loss = self.loss_fn(out, y)
-        loss.backward()
-        self.optim.step()
-
+class OmniscientConvStudent(BaseConv):
     def example_difficulty(self, X, y):
-        self.train()
-        self.optim.zero_grad()
-        self.lin.weight.retain_grad()
-        out = self(X)
-        loss = self.loss_fn(out, y)
-        loss.backward()
-        res = self.lin.weight.grad
-        return (th.norm(res) ** 2).item()
+        return __example_difficulty__(self, X, y)
 
     def example_usefulness(self, w_star, X, y):
-        self.train()
-        self.optim.zero_grad()
-        self.lin.weight.retain_grad()
-        out = self(X)
-        loss = self.loss_fn(out, y)
-        loss.backward()
-        res = self.lin.weight.grad
-        diff = self.lin.weight - w_star
-        return th.dot(diff.view(-1), res.view(-1)).item()
+        return __example_usefulness__(self, w_star, X, y)
+
+
+class OmniscientLinearTeacher(BaseLinear):
+    def select_example(self, student, X, y, batch_size):
+        return __select_example__(self, student, X, y, batch_size)
+
+
+class OmniscientConvTeacher(BaseLinear):
+    def select_example(self, student, X, y, batch_size):
+        return __select_example__(self, student, X, y, batch_size)

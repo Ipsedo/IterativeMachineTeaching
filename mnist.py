@@ -1,5 +1,6 @@
 import teachers.omniscient_teacher as omni
 import teachers.surrogate_teacher as surro
+import teachers.utils as utils
 import numpy as np
 import matplotlib.pyplot as plt
 import torch as th
@@ -39,9 +40,9 @@ def mnist_data_omniscient():
     batch_size = 5
     nb_batch = int(nb_example / batch_size)
 
-    teacher = omni.OmniscientLinearClassifier(784)
-    example = omni.OmniscientLinearClassifier(784)
-    student = omni.OmniscientLinearClassifier(784)
+    teacher = omni.OmniscientLinearTeacher(784)
+    example = utils.BaseLinear(784)
+    student = omni.OmniscientLinearStudent(784)
 
     X_train = th.Tensor(X[:nb_example])
     y_train = th.Tensor(y[:nb_example]).view(-1)
@@ -79,18 +80,7 @@ def mnist_data_omniscient():
     res_student = []
 
     for t in range(T):
-        scores = []
-        for i in range(nb_batch):
-            i_min = i * batch_size
-            i_max = (i + 1) * batch_size
-            data = X_train[i_min:i_max]
-            label = y_train[i_min:i_max]
-            eta = student.optim.param_groups[0]["lr"]
-            s = (eta ** 2) * student.example_difficulty(data, label)
-            s -= eta * 2 * student.example_usefulness(teacher.lin.weight, data, label)
-            scores.append(s)
-
-        i = np.argmin(scores)
+        i = teacher.select_example(student, X_train, y_train, batch_size)
         i_min = i * batch_size
         i_max = (i + 1) * batch_size
 
@@ -148,14 +138,13 @@ def mnist_data_surrogate(is_same_feature_space):
     batch_size = 5
     nb_batch = int(nb_example / batch_size)
 
-    dim_teacher = 24
-    proj_mat = th.randn(784, dim_teacher)
     if is_same_feature_space:
-        dim_teacher = 784
+        teacher = surro.SurrogateLinearTeacher(784)
+    else:
+        teacher = surro.SurrogateDiffLinearTeacher(784, 24, normal_dist=True)
 
-    teacher = surro.SurrogateLinearClassifier(dim_teacher)
-    example = surro.SurrogateLinearClassifier(784)
-    student = surro.SurrogateLinearClassifier(784)
+    example = utils.BaseLinear(784)
+    student = surro.SurrogateLinearStudent(784)
 
     X_train = th.Tensor(X[:nb_example])
     y_train = th.Tensor(y[:nb_example]).view(-1)
@@ -167,16 +156,9 @@ def mnist_data_surrogate(is_same_feature_space):
             i_min = i * batch_size
             i_max = (i + 1) * batch_size
 
-            if is_same_feature_space:
-                teacher.update(X_train[i_min:i_max], y_train[i_min:i_max])
-            else:
-                teacher.update(th.matmul(X_train[i_min:i_max], proj_mat), y_train[i_min:i_max])
+            teacher.update(X_train[i_min:i_max], y_train[i_min:i_max])
 
-        if is_same_feature_space:
-            test = teacher(X_test)
-        else:
-            test = teacher(th.matmul(X_test, proj_mat))
-
+        test = teacher(X_test)
         tmp = th.where(test > 0.5, th.ones(1), th.zeros(1))
         nb_correct = th.where(tmp.view(-1) == y_test, th.ones(1), th.zeros(1)).sum().item()
         print(nb_correct, "/", X_test.size(0))
@@ -202,22 +184,7 @@ def mnist_data_surrogate(is_same_feature_space):
     res_student = []
 
     for t in range(T):
-        scores = []
-        for i in range(nb_batch):
-            i_min = i * batch_size
-            i_max = (i + 1) * batch_size
-            data = X_train[i_min:i_max]
-            label = y_train[i_min:i_max]
-            eta = student.optim.param_groups[0]["lr"]
-            s = (eta ** 2) * student.example_difficulty(data, label)
-            if is_same_feature_space:
-                loss_teacher = teacher.loss_fn(teacher(data), label)
-            else:
-                loss_teacher = teacher.loss_fn(teacher(th.matmul(data, proj_mat)), label)
-            s -= eta * 2 * student.example_usefulness(loss_teacher, data, label)
-            scores.append(s)
-
-        i = np.argmin(scores)
+        i = teacher.select_example(student, X_train, y_train, batch_size)
         i_min = i * batch_size
         i_max = (i + 1) * batch_size
 

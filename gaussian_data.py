@@ -1,5 +1,6 @@
 import teachers.omniscient_teacher as omni
 import teachers.surrogate_teacher as surro
+import teachers.utils as utils
 import numpy as np
 import matplotlib.pyplot as plt
 import torch as th
@@ -26,13 +27,13 @@ def init_data(dim, nb_data_per_class):
 
 def gaussian_omniscient_main():
     dim = 10
-    nb_data_per_class = 200
+    nb_data_per_class = 100
 
     X, y = init_data(dim, nb_data_per_class)
 
-    teacher = omni.OmniscientLinearClassifier(dim)
-    example = omni.OmniscientLinearClassifier(dim)
-    student = omni.OmniscientLinearClassifier(dim)
+    teacher = omni.OmniscientLinearTeacher(dim)
+    example = utils.BaseLinear(dim)
+    student = omni.OmniscientLinearStudent(dim)
 
     X = th.Tensor(X).view(-1, dim)
     y = th.Tensor(y).view(-1)
@@ -71,18 +72,7 @@ def gaussian_omniscient_main():
     res_student = []
 
     for t in range(T):
-        scores = []
-        for i in range(nb_batch):
-            i_min = i * batch_size
-            i_max = (i + 1) * batch_size
-            data = X[i_min:i_max]
-            label = y[i_min:i_max]
-            eta = student.optim.param_groups[0]["lr"]
-            s = (eta ** 2) * student.example_difficulty(data, label)
-            s -= eta * 2 * student.example_usefulness(teacher.lin.weight, data, label)
-            scores.append(s)
-
-        i = np.argmin(scores)
+        i = teacher.select_example(student, X, y, batch_size)
         i_min = i * batch_size
         i_max = (i + 1) * batch_size
         x_t = X[i_min:i_max]
@@ -111,13 +101,13 @@ def gaussian_surrogate_main(is_same_feature_space):
     nb_data_per_class = 400
     X, y = init_data(dim, nb_data_per_class)
 
-    dim_teacher = 5
-    proj_mat = th.rand(dim, dim_teacher)
     if is_same_feature_space:
-        dim_teacher = dim
-    teacher = surro.SurrogateLinearClassifier(dim_teacher)
-    example = surro.SurrogateLinearClassifier(10)
-    student = surro.SurrogateLinearClassifier(10)
+        teacher = surro.SurrogateLinearTeacher(dim)
+    else:
+        teacher = surro.SurrogateDiffLinearTeacher(dim, 5, normal_dist=False)
+
+    example = utils.BaseLinear(10)
+    student = surro.SurrogateLinearStudent(10)
 
     X = th.Tensor(X).view(-1, dim)
     y = th.Tensor(y).view(-1)
@@ -129,29 +119,27 @@ def gaussian_surrogate_main(is_same_feature_space):
         for i in range(nb_batch):
             i_min = i * batch_size
             i_max = (i + 1) * batch_size
-            if is_same_feature_space:
-                teacher.update(X[i_min:i_max], y[i_min:i_max])
-            else:
-                teacher.update(th.matmul(X[i_min:i_max], proj_mat), y[i_min:i_max])
-        if is_same_feature_space:
-            test = teacher(X)
-        else:
-            test = teacher(th.matmul(X, proj_mat))
+            teacher.update(X[i_min:i_max], y[i_min:i_max])
+
+        test = teacher(X)
         tmp = th.where(test > 0.5, th.ones(1), th.zeros(1))
         nb_correct = th.where(tmp.view(-1) == y, th.ones(1), th.zeros(1)).sum().item()
         print(nb_correct, "/", 2 * nb_data_per_class)
 
-    T = 1000
+    T = 500
 
     res_example = []
 
     for t in range(T):
         i = th.randint(0, nb_batch, size=(1,)).item()
+
         i_min = i * batch_size
         i_max = (i + 1) * batch_size
         data = X[i_min:i_max]
         label = y[i_min:i_max]
+
         example.update(data, label)
+
         test = example(X)
         tmp = th.where(test > 0.5, th.ones(1), th.zeros(1))
         nb_correct = th.where(tmp.view(-1) == y, th.ones(1), th.zeros(1)).sum().item()
@@ -162,26 +150,13 @@ def gaussian_surrogate_main(is_same_feature_space):
     res_student = []
 
     for t in range(T):
-        scores = []
-        for i in range(nb_batch):
-            i_min = i * batch_size
-            i_max = (i + 1) * batch_size
-            data = X[i_min:i_max]
-            label = y[i_min:i_max]
-            eta = student.optim.param_groups[0]["lr"]
-            s = (eta ** 2) * student.example_difficulty(data, label)
-            if is_same_feature_space:
-                loss_teacher = teacher.loss_fn(teacher(data), label)
-            else:
-                loss_teacher = teacher.loss_fn(teacher(th.matmul(data, proj_mat)), label)
-            s -= eta * 2 * student.example_usefulness(loss_teacher, data, label)
-            scores.append(s)
+        i = teacher.select_example(student, X, y, batch_size)
 
-        i = np.argmin(scores)
         i_min = i * batch_size
         i_max = (i + 1) * batch_size
         x_t = X[i_min:i_max]
         y_t = y[i_min:i_max]
+
         student.update(x_t, y_t)
 
         test = student(X)

@@ -1,6 +1,7 @@
 import data.dataset_loader as data_loader
 import matplotlib.pyplot as plt
 import teachers.omniscient_teacher as omni
+import teachers.utils as utils
 import numpy as np
 import torch as th
 import sys
@@ -35,7 +36,7 @@ def cifar10_main():
     print(data.shape)
     print(labels.shape)
 
-    teacher = omni.OmniscientConvClassifier(2e-3)
+    teacher = omni.OmniscientConvTeacher(2e-3)
 
     X = th.Tensor(data[:nb_example])
     y = th.Tensor(labels[:nb_example]).view(-1)
@@ -65,13 +66,14 @@ def cifar10_main():
     plt.legend()
     plt.show()
 
-    example = copy.deepcopy(teacher)
-    student = copy.deepcopy(teacher)
+    example = utils.BaseConv(2e-3)
+    example.seq = copy.deepcopy(teacher.seq)
 
-    th.nn.init.xavier_uniform_(example.lin.weight)
+    student = omni.OmniscientConvStudent(2e-3)
+    student.seq = copy.deepcopy(teacher.seq)
+
     example.optim = th.optim.SGD(example.lin.parameters(), lr=example.eta)
 
-    th.nn.init.xavier_uniform_(student.lin.weight)
     student.optim = th.optim.SGD(student.lin.parameters(), lr=student.eta)
 
     T = 400
@@ -107,25 +109,7 @@ def cifar10_main():
     res_student = []
 
     for t in range(T):
-        min_score = sys.maxsize
-        idx_min = 0
-        for i in range(nb_batch):
-            i_min = i * batch_size
-            i_max = (i + 1) * batch_size
-
-            x_b = X[i_min:i_max].cuda()
-            y_b = y[i_min:i_max].cuda()
-
-            eta = student.optim.param_groups[-1]["lr"]
-
-            s = (eta ** 2) * student.example_difficulty(x_b, y_b)
-            s -= eta * 2 * student.example_usefulness(teacher.lin.weight, x_b, y_b)
-
-            if min_score > s:
-                min_score = s
-                idx_min = i
-
-        i = idx_min
+        i = teacher.select_example(student, X, y, batch_size)
 
         i_min = i * batch_size
         i_max = (i + 1) * batch_size
