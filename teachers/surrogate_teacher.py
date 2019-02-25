@@ -20,6 +20,26 @@ def __example_usefulness__(student, loss_teacher, X, y):
     return loss - loss_teacher
 
 
+def __select_example__(teacher, student, X, y, batch_size):
+    nb_batch = int(X.size(0) / batch_size)
+
+    min_score = sys.float_info.max
+    arg_min = 0
+    for i in range(nb_batch):
+        i_min = i * batch_size
+        i_max = (i + 1) * batch_size
+        data = X[i_min:i_max]
+        label = y[i_min:i_max]
+        eta = student.optim.param_groups[0]["lr"]
+        s = (eta ** 2) * student.example_difficulty(data, label)
+        loss_teacher = teacher.loss_fn(teacher(data), label)
+        s -= eta * 2 * student.example_usefulness(loss_teacher, data, label)
+        if s.item() < min_score:
+            min_score = s.item()
+            arg_min = i
+    return arg_min
+
+
 class SurrogateLinearStudent(BaseLinear):
     def example_difficulty(self, X, y):
         return __example_difficulty__(self, X, y)
@@ -30,24 +50,7 @@ class SurrogateLinearStudent(BaseLinear):
 
 class SurrogateLinearTeacher(BaseLinear):
     def select_example(self, student, X, y, batch_size):
-
-        nb_batch = int(X.size(0) / batch_size)
-
-        min_score = sys.float_info.max
-        arg_min = 0
-        for i in range(nb_batch):
-            i_min = i * batch_size
-            i_max = (i + 1) * batch_size
-            data = X[i_min:i_max]
-            label = y[i_min:i_max]
-            eta = student.optim.param_groups[0]["lr"]
-            s = (eta ** 2) * student.example_difficulty(data, label)
-            loss_teacher = self.loss_fn(self(data), label)
-            s -= eta * 2 * student.example_usefulness(loss_teacher, data, label)
-            if s.item() < min_score:
-                min_score = s.item()
-                arg_min = i
-        return arg_min
+        return __select_example__(self, student, X, y, batch_size)
 
 
 class SurrogateDiffLinearTeacher(SurrogateLinearTeacher):
@@ -60,3 +63,16 @@ class SurrogateDiffLinearTeacher(SurrogateLinearTeacher):
 
     def forward(self, x):
         return super(SurrogateLinearTeacher, self).forward(th.matmul(x, self.proj_mat))
+
+
+class SurrogateConvStudent(BaseConv):
+    def example_difficulty(self, X, y):
+        return __example_difficulty__(self, X, y)
+
+    def example_usefulness(self, loss_teacher, X, y):
+        return __example_usefulness__(self, loss_teacher, X, y)
+
+
+class SurrogateConvTeacher(BaseConv):
+    def select_example(self, student, X, y, batch_size):
+        return __select_example__(self, student, X, y, batch_size)
