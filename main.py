@@ -1,8 +1,5 @@
-import gaussian_data
-import mnist
-import cifar10
+from experiences import cifar10, mnist, gaussian_data
 import sys
-# import data.dataset_loader as dataset_loader
 
 if __name__ == "__main__":
 
