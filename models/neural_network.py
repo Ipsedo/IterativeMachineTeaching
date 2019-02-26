@@ -52,10 +52,16 @@ class ConvModel(nn.Module):
         self.sig = nn.Sigmoid()
 
     def forward(self, x):
+        if len(x.size()) == 3:
+            x = x.unsqueeze(0)
+            one_data = True
+        else:
+            one_data = False
+
         out = self.seq(x).view(-1, self.linear1_dim)
         out = self.lin(out)
         out = self.sig(out)
-        return out
+        return out.squeeze(0) if one_data else out
 
 
 class ConvModelMultiClass(nn.Module):
@@ -79,6 +85,11 @@ class ConvModelMultiClass(nn.Module):
         self.lin = nn.Linear(self.linear1_dim, nb_class)
 
     def forward(self, x):
+        if len(x.size()) == 3:
+            x = x.unsqueeze(0)
+            one_data = True
+        else:
+            one_data = False
         out = self.seq(x).view(-1, self.linear1_dim)
         out = self.lin(out)
-        return out
+        return out.squeeze(0) if one_data else out
