@@ -56,16 +56,19 @@ def mnist_main(teacher_type):
         teacher = surro.SurrogateDiffLinearTeacher(dim, 24, normal_dist=True)
         student = surro.SurrogateLinearStudent(dim)
         teacher_name = "surrogate teacher (different feature space)"
-    elif teacher_type == "immi":
+    elif teacher_type == "immi_diff":
         fst_x = th.Tensor(X[th.randint(0, X.shape[0], (1,)).item()])
-        teacher = immi.ImitationLinearTeacher(dim, 24, fst_x, normal_dist=True)
+        teacher = immi.ImitationDiffLinearTeacher(dim, 24, fst_x, normal_dist=True)
         student = utils.BaseLinear(dim)
         teacher_name = "immitation teacher (different feature space)"
+    elif teacher_type == "immi_same":
+        fst_x = th.Tensor(X[th.randint(0, X.shape[0], (1,)).item()])
+        teacher = immi.ImitationLinearTeacher(dim, fst_x)
+        student = utils.BaseLinear(dim)
+        teacher_name = "immitation teacher (same feature space)"
     else:
-        print("Unrecognized teacher, starting omniscient teacher as default")
-        teacher = omni.OmniscientLinearTeacher(dim)
-        student = omni.OmniscientLinearStudent(dim)
-        teacher_name = "omniscient teacher"
+        print("Unrecognized teacher !")
+        sys.exit()
 
     X_train = th.Tensor(X[:nb_example])
     y_train = th.Tensor(y[:nb_example]).view(-1)
@@ -83,9 +86,6 @@ def mnist_main(teacher_type):
         print(nb_correct, "/", X_test.size(0))
 
     T = 300
-
-    batch_size = 1
-    nb_batch = int(nb_example / batch_size)
 
     res_example = []
 

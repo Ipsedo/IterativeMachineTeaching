@@ -45,16 +45,19 @@ def gaussian_main(teacher_type):
         teacher = surro.SurrogateDiffLinearTeacher(dim, 5, normal_dist=False)
         student = surro.SurrogateLinearStudent(dim)
         teacher_name = "surrogate teacher (different feature space)"
-    elif teacher_type == "immi":
+    elif teacher_type == "immi_same":
+        fst_x = th.Tensor(X[th.randint(0, X.shape[0], (1,)).item()]).unsqueeze(0)
+        teacher = immi.ImitationLinearTeacher(dim, fst_x)
+        student = utils.BaseLinear(dim)
+        teacher_name = "immitation teacher (same feature space)"
+    elif teacher_type == "immi_diff":
         fst_x = th.Tensor(X[th.randint(0, X.shape[0], (1,)).item()])
-        teacher = immi.ImitationLinearTeacher(dim, 5, fst_x, normal_dist=False)
+        teacher = immi.ImitationDiffLinearTeacher(dim, 5, fst_x, normal_dist=False)
         student = utils.BaseLinear(dim)
         teacher_name = "immitation teacher (different feature space)"
     else:
-        print("Unrecognized teacher, starting omniscient teacher as default")
-        teacher = omni.OmniscientLinearTeacher(dim)
-        student = omni.OmniscientLinearStudent(dim)
-        teacher_name = "omniscient teacher"
+        print("Unrecognized teacher !")
+        sys.exit()
 
     X = th.Tensor(X).view(-1, dim)
     y = th.Tensor(y).view(-1)

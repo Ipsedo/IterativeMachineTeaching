@@ -2,6 +2,7 @@ import data.dataset_loader as data_loader
 import matplotlib.pyplot as plt
 import teachers.omniscient_teacher as omni
 import teachers.surrogate_teacher as surro
+import teachers.imitation_teacher as immi
 import teachers.utils as utils
 import numpy as np
 import torch as th
@@ -37,19 +38,27 @@ def cifar10_main(teacher_type):
     print(data.shape)
     print(labels.shape)
 
+    eta = 3e-4
+
     if teacher_type == "omni":
-        teacher = omni.OmniscientConvTeacher(2e-3)
+        teacher = omni.OmniscientConvTeacher(eta)
         teacher_name = "omniscient teacher"
     elif teacher_type == "surro_same":
-        teacher = surro.SurrogateConvTeacher(2e-3)
+        teacher = surro.SurrogateConvTeacher(eta)
         teacher_name = "surrogate teacher (same feature space)"
     elif teacher_type == "surro_diff":
-        print("Unsuported teacher for CIFAR-10 !")
+        print("Unsuported teacher for CIFAR-10 (%s) !" % teacher_type)
+        sys.exit()
+    elif teacher_type == "immi_same":
+        fst_x = th.Tensor(data[th.randint(0, data.shape[0], (1,)).item()]).unsqueeze(0).cuda()
+        teacher = immi.ImmitationConvTeacher(eta, fst_x)
+        teacher_name = "immitation teacher (same feature space)"
+    elif teacher_type == "immi_diff":
+        print("Unsuported teacher for CIFAR-10 (%s) !" % teacher_type)
         sys.exit()
     else:
-        print("Unrecognized teacher, starting omniscient teacher as default")
-        teacher = omni.OmniscientConvTeacher(2e-3)
-        teacher_name = "omniscient teacher"
+        print("Unrecognized teacher !")
+        sys.exit()
 
     X = th.Tensor(data[:nb_example])
     y = th.Tensor(labels[:nb_example]).view(-1)
@@ -80,17 +89,22 @@ def cifar10_main(teacher_type):
     plt.show()
 
     if teacher_type == "omni":
-        student = omni.OmniscientConvStudent(2e-3)
+        student = omni.OmniscientConvStudent(eta)
     elif teacher_type == "surro_same":
-        student = surro.SurrogateConvStudent(2e-3)
+        student = surro.SurrogateConvStudent(eta)
+    elif teacher_type == "immi_same":
+        student = utils.BaseConv(eta)
     elif teacher_type == "surro_diff":
-        print("Unsuported teacher for CIFAR-10 !")
+        print("Unsuported teacher for CIFAR-10 (%s) !" % teacher_type)
+        sys.exit()
+    elif teacher_type == "immi_diff":
+        print("Unsuported teacher for CIFAR-10 (%s) !" % teacher_type)
         sys.exit()
     else:
-        print("Unrecognized teacher, starting omniscient teacher as default")
-        student = omni.OmniscientConvStudent(2e-3)
+        print("Unrecognized teacher !")
+        sys.exit()
 
-    example = utils.BaseConv(2e-3)
+    example = utils.BaseConv(eta)
     example.seq = copy.deepcopy(teacher.seq)
 
     student.seq = copy.deepcopy(teacher.seq)
