@@ -32,11 +32,14 @@ def __select_example__(teacher, student, X, y, batch_size):
 
     min_score = sys.float_info.max
     arg_min = 0
+
     for i in range(nb_batch):
         i_min = i * batch_size
         i_max = (i + 1) * batch_size
+
         data = X[i_min:i_max]
         label = y[i_min:i_max]
+
         eta = student.optim.param_groups[0]["lr"]
         s = (eta ** 2) * student.example_difficulty(data, label)
         s -= eta * 2 * student.example_usefulness(teacher.lin.weight, data, label)
