@@ -1,5 +1,6 @@
 import teachers.omniscient_teacher as omni
 import teachers.surrogate_teacher as surro
+import teachers.imitation_teacher as immi
 import teachers.utils as utils
 import numpy as np
 import matplotlib.pyplot as plt
@@ -44,6 +45,11 @@ def gaussian_main(teacher_type):
         teacher = surro.SurrogateDiffLinearTeacher(dim, 5, normal_dist=False)
         student = surro.SurrogateLinearStudent(dim)
         teacher_name = "surrogate teacher (different feature space)"
+    elif teacher_type == "immi":
+        fst_x = th.Tensor(X[th.randint(0, X.shape[0], (1,)).item()])
+        teacher = immi.ImitationLinearTeacher(dim, 5, fst_x, normal_dist=False)
+        student = utils.BaseLinear(dim)
+        teacher_name = "immitation teacher (different feature space)"
     else:
         print("Unrecognized teacher, starting omniscient teacher as default")
         teacher = omni.OmniscientLinearTeacher(dim)
