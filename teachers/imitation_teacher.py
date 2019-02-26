@@ -8,8 +8,8 @@ def __update_v__(teacher, student, x, is_same_feature_space):
     batch_size = x.size(0)
 
     for i in range(batch_size):
-        data = x[i].unsqueeze(0)
-        out_student, out_v = student(data).squeeze(0).data, teacher.v(data).squeeze(0).data
+        data = x[i]
+        out_student, out_v = student(data).data, teacher.v(data).data
 
         eta = student.optim.param_groups[0]["lr"]
 
@@ -17,7 +17,7 @@ def __update_v__(teacher, student, x, is_same_feature_space):
             tmp = x[i]
         elif hasattr(teacher, "seq"):
             # Convolution teacher
-            tmp = teacher.seq(data).view(-1)
+            tmp = teacher.seq(data.unsqueeze(0)).view(-1)
         else:
             tmp = th.matmul(x[i], teacher.proj_mat)
         teacher.v.lin.weight.data = teacher.v.lin.weight.data - eta * (out_v - out_student) * tmp
@@ -46,7 +46,7 @@ def __select_example__(teacher, student, X, y, batch_size, is_same_feature_space
         teacher.v.train()
         teacher.v.zero_grad()
 
-        # Pour retenir le ggraphe de calcul de v
+        # Pour retenir le graphe de calcul de v
         loss_v = teacher.v.loss_fn(teacher.v(data), label)
         loss_v.backward(retain_graph=True)
         teacher.v.zero_grad()
@@ -91,9 +91,11 @@ class ImitationLinearTeacher(BaseLinear):
 
 
 class BaseLinearDifferentFeatureSpace(BaseLinear):
-    def __init__(self, feature_space, used_feature_space, normal_dist=True):
+    def __init__(self, feature_space, used_feature_space, normal_dist=True, proj_mat=None):
         super(BaseLinearDifferentFeatureSpace, self).__init__(used_feature_space)
-        if normal_dist:
+        if proj_mat is not None:
+            self.proj_mat = proj_mat
+        elif normal_dist:
             self.proj_mat = th.randn(feature_space, used_feature_space)
         else:
             self.proj_mat = th.rand(feature_space, used_feature_space)
@@ -105,7 +107,7 @@ class BaseLinearDifferentFeatureSpace(BaseLinear):
 class ImitationDiffLinearTeacher(BaseLinearDifferentFeatureSpace):
     def __init__(self, feature_space, used_feature_space, fst_x, normal_dist=True):
         super(ImitationDiffLinearTeacher, self).__init__(feature_space, used_feature_space, normal_dist)
-        self.v = BaseLinearDifferentFeatureSpace(feature_space, used_feature_space, normal_dist)
+        self.v = BaseLinearDifferentFeatureSpace(feature_space, used_feature_space, normal_dist, self.proj_mat)
         self.x_t_moins_un = fst_x.view(-1, feature_space)
 
     def select_example(self, student, X, y, batch_size):
