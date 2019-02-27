@@ -28,6 +28,7 @@ def init_data(dim, nb_data_per_class):
 
 def gaussian_main(teacher_type):
     dim = 10
+    dim__diff = 7
     nb_data_per_class = 400
 
     X, y = init_data(dim, nb_data_per_class)
@@ -42,17 +43,17 @@ def gaussian_main(teacher_type):
         student = surro.SurrogateLinearStudent(dim)
         teacher_name = "surrogate teacher (same feature space)"
     elif teacher_type == "surro_diff":
-        teacher = surro.SurrogateDiffLinearTeacher(dim, 5, normal_dist=False)
+        teacher = surro.SurrogateDiffLinearTeacher(dim, dim__diff, normal_dist=False)
         student = surro.SurrogateLinearStudent(dim)
         teacher_name = "surrogate teacher (different feature space)"
     elif teacher_type == "immi_same":
-        fst_x = th.Tensor(X[th.randint(0, X.shape[0], (1,)).item()]).unsqueeze(0)
+        fst_x = th.Tensor(X[th.randint(0, X.shape[0], (1,)).item()])
         teacher = immi.ImitationLinearTeacher(dim, fst_x)
         student = utils.BaseLinear(dim)
         teacher_name = "immitation teacher (same feature space)"
     elif teacher_type == "immi_diff":
         fst_x = th.Tensor(X[th.randint(0, X.shape[0], (1,)).item()])
-        teacher = immi.ImitationDiffLinearTeacher(dim, 5, fst_x, normal_dist=False)
+        teacher = immi.ImitationDiffLinearTeacher(dim, dim__diff, fst_x, normal_dist=False)
         student = utils.BaseLinear(dim)
         teacher_name = "immitation teacher (different feature space)"
     else:
