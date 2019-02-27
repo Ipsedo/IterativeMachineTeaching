@@ -118,7 +118,7 @@ class ImmitationConvTeacher(BaseConv):
     def __init__(self, eta, fst_x):
         super(ImmitationConvTeacher, self).__init__(eta)
         self.v = BaseConv(eta)
-        self.x_t_moins_un = fst_x # TODO .view(...)
+        self.x_t_moins_un = fst_x
         self.fst_select_example = True
 
     def select_example(self, student, X, y, batch_size):
