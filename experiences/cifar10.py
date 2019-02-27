@@ -38,7 +38,7 @@ def cifar10_main(teacher_type):
     print(data.shape)
     print(labels.shape)
 
-    eta = 1e-3
+    eta = 2e-3
 
     if teacher_type == "omni":
         teacher = omni.OmniscientConvTeacher(eta)
