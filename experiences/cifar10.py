@@ -12,6 +12,8 @@ import copy
 
 
 def cifar10_main(teacher_type):
+
+    # Chargelent des données
     data, labels = data_loader.load_cifar10_2()
     labels = labels.reshape(-1)
 
@@ -21,15 +23,20 @@ def cifar10_main(teacher_type):
     class_1 = 5
     class_2 = 9
 
+    # Récupération des deux classes souhaitées
     f = (labels == class_1) | (labels == class_2)
     data, labels = data[f], labels[f]
 
+    # Mise en bonne dimension des données
     data = data_loader.cifar10_proper_array(data)
 
+    # séléction du bon nombre de données
     data, labels = data[:nb_example + nb_test], labels[:nb_example + nb_test]
 
+    # Changement de label et 0 | 1
     labels = np.where(labels == class_1, 0, 1)
 
+    # Shuffle des données
     randomize = np.arange(data.shape[0])
     np.random.shuffle(randomize)
     data = data[randomize]
@@ -40,6 +47,7 @@ def cifar10_main(teacher_type):
 
     eta = 2e-3
 
+    # Séléction du teacher
     if teacher_type == "omni":
         teacher = omni.OmniscientConvTeacher(eta)
         teacher_name = "omniscient teacher"
@@ -60,6 +68,7 @@ def cifar10_main(teacher_type):
         print("Unrecognized teacher !")
         sys.exit()
 
+    # Passage des données sous pytorch
     X = th.Tensor(data[:nb_example])
     y = th.Tensor(labels[:nb_example]).view(-1)
     X_test = th.Tensor(data[nb_example:nb_example + nb_test])
@@ -71,6 +80,8 @@ def cifar10_main(teacher_type):
     nb_batch = int(nb_example / batch_size)
 
     accuracies = []
+
+    # Boucle d'apprentissage du teacher
     for _ in tqdm(range(100)):
         for i in range(nb_batch):
             i_min = i * batch_size
@@ -88,6 +99,7 @@ def cifar10_main(teacher_type):
     plt.legend()
     plt.show()
 
+    # Séléction du student
     if teacher_type == "omni":
         student = omni.OmniscientConvStudent(eta)
     elif teacher_type == "surro_same":
@@ -104,16 +116,20 @@ def cifar10_main(teacher_type):
         print("Unrecognized teacher !")
         sys.exit()
 
+    # Création de l'exemple
     example = utils.BaseConv(eta)
-    example.seq = copy.deepcopy(teacher.seq)
 
+    # Copie des poids des convolution du teacher vers le student et l'exemple
+    example.seq = copy.deepcopy(teacher.seq)
     student.seq = copy.deepcopy(teacher.seq)
 
     example.optim = th.optim.SGD(example.lin.parameters(), lr=example.eta)
     student.optim = th.optim.SGD(student.lin.parameters(), lr=student.eta)
 
+    # 400 itération
     T = 400
 
+    # On séléctionne une sous partie des exemple, trop long sinon
     nb_example = 200
     X = th.Tensor(data[:nb_example])
     y = th.Tensor(labels[:nb_example]).view(-1)
@@ -125,6 +141,7 @@ def cifar10_main(teacher_type):
 
     res_example = []
 
+    # Entrainement de l'exemple
     for t in range(T):
         i = th.randint(0, nb_batch, size=(1,)).item()
         i_min = i * batch_size
@@ -144,6 +161,7 @@ def cifar10_main(teacher_type):
 
     res_student = []
 
+    # Entrainement du student avec le teacher
     for t in range(T):
         i = teacher.select_example(student, X.cuda(), y.cuda(), batch_size)
 

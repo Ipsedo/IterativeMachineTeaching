@@ -15,6 +15,7 @@ def mnist_main(teacher_type):
     nb_example = 5000
     nb_test = 1000
 
+    # Chargement des données
     mnistfile = "./data/mnist.pkl.gz"
     train_set, valid_set, test_set = dataset_loader.load_mnist(mnistfile)
 
@@ -23,15 +24,20 @@ def mnist_main(teacher_type):
 
     class_1 = 1
     class_2 = 7
-    f = (Y_train == class_1) | (Y_train == class_2)
 
+    # Séléction des deux classes souhaitées
+    f = (Y_train == class_1) | (Y_train == class_2)
     X = X_train[f]
     y = Y_train[f]
+
+    # Renomage des labels
     y = np.where(y == class_1, 0, 1)
 
+    # On prend le bon nombre de données
     X = X[:nb_example + nb_test]
     y = y[:nb_example + nb_test]
 
+    # Shuffle des données
     randomize = np.arange(X.shape[0])
     np.random.shuffle(randomize)
     X = X[randomize]
@@ -43,7 +49,10 @@ def mnist_main(teacher_type):
     batch_size = 5
     nb_batch = int(nb_example / batch_size)
 
+    # Création de l'exemple
     example = utils.BaseLinear(dim)
+
+    # Séléction du teacher et du student
     if teacher_type == "omni":
         teacher = omni.OmniscientLinearTeacher(dim)
         student = omni.OmniscientLinearStudent(dim)
@@ -70,11 +79,13 @@ def mnist_main(teacher_type):
         print("Unrecognized teacher !")
         sys.exit()
 
+    # Passage des données vers pytorch
     X_train = th.Tensor(X[:nb_example])
     y_train = th.Tensor(y[:nb_example]).view(-1)
     X_test = th.Tensor(X[nb_example:nb_example + nb_test])
     y_test = th.Tensor(y[nb_example:nb_example + nb_test])
 
+    # Entrainement du teacher
     for e in range(30):
         for i in range(nb_batch):
             i_min = i * batch_size
@@ -89,6 +100,7 @@ def mnist_main(teacher_type):
 
     res_example = []
 
+    # Entrainement de l'exemple
     for t in range(T):
         i = th.randint(0, nb_batch, size=(1,)).item()
         i_min = i * batch_size
@@ -105,6 +117,7 @@ def mnist_main(teacher_type):
 
     res_student = []
 
+    # Entrainement du student avec le teacher
     for t in range(T):
         i = teacher.select_example(student, X_train, y_train, batch_size)
         i_min = i * batch_size

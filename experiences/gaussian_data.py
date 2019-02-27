@@ -9,6 +9,12 @@ import sys
 
 
 def init_data(dim, nb_data_per_class):
+    """
+    Création des données gaussien
+    :param dim: la dimension des données
+    :param nb_data_per_class: le nombre d'exemple par classe
+    :return: un tuple (données, labels)
+    """
     X1 = np.random.multivariate_normal([0.5] * dim, np.identity(dim), nb_data_per_class)
     y1 = np.ones((nb_data_per_class,))
 
@@ -33,7 +39,10 @@ def gaussian_main(teacher_type):
 
     X, y = init_data(dim, nb_data_per_class)
 
+    # définition de l'exemple
     example = utils.BaseLinear(dim)
+
+    # Selection du student et du teacher
     if teacher_type == "omni":
         teacher = omni.OmniscientLinearTeacher(dim)
         student = omni.OmniscientLinearStudent(dim)
@@ -66,6 +75,7 @@ def gaussian_main(teacher_type):
     batch_size = 1
     nb_batch = int(2 * nb_data_per_class / batch_size)
 
+    # entrainement du teacher
     for e in range(30):
         for i in range(nb_batch):
             i_min = i * batch_size
@@ -80,6 +90,7 @@ def gaussian_main(teacher_type):
 
     res_example = []
 
+    # Entrainement de l'exemple
     for t in range(T):
         i = th.randint(0, nb_batch, size=(1,)).item()
         i_min = i * batch_size
@@ -96,6 +107,7 @@ def gaussian_main(teacher_type):
 
     res_student = []
 
+    # Entrainement du student avec le teacher
     for t in range(T):
         i = teacher.select_example(student, X, y, batch_size)
         i_min = i * batch_size
