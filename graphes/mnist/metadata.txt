@@ -1,0 +1,10 @@
+nb example train = 5000
+nb example test = 1000
+batch size = 5
+dimension = 784
+dimension diff = 24
+nb epoques teacher = 30
+nb iteration = 300
+learning rate = 1e-3
+score moyen teacher = ~950 / 1000 (accuracy)
+projection matrix teacher = torch.randn
