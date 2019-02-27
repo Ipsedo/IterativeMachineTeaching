@@ -26,7 +26,7 @@ def cifar10_main(teacher_type):
 
     data = data_loader.cifar10_proper_array(data)
 
-    data, labels = data[:nb_example+nb_test], labels[:nb_example+nb_test]
+    data, labels = data[:nb_example + nb_test], labels[:nb_example + nb_test]
 
     labels = np.where(labels == class_1, 0, 1)
 
@@ -62,8 +62,8 @@ def cifar10_main(teacher_type):
 
     X = th.Tensor(data[:nb_example])
     y = th.Tensor(labels[:nb_example]).view(-1)
-    X_test = th.Tensor(data[nb_example:nb_example+nb_test])
-    y_test = th.Tensor(labels[nb_example:nb_example+nb_test]).view(-1)
+    X_test = th.Tensor(data[nb_example:nb_example + nb_test])
+    y_test = th.Tensor(labels[nb_example:nb_example + nb_test]).view(-1)
     print(X_test.size())
     sys.stdout.flush()
 
