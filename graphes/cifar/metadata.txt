@@ -1,0 +1,9 @@
+nb example train = 9000
+nb example test = 500
+learning rate = 2e-3
+batch size teacher = 32
+nb epoques teacher = 100
+nb example train pour student = 200
+batch size student = 1
+nb iteration = 400
+score moyen teacher = ~75% accuracy
