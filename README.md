@@ -30,3 +30,5 @@ surrogate teacher (different feature space)
 ```bash
 $ python main.py gaussian surro_diff
 ```
+
+__CIFAR__ : Executer le script donwload_cifar.sh dans le dossier `IterativeMachineTeaching/data`
