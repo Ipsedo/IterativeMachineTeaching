@@ -1,0 +1,11 @@
+learning rate = 1e-3
+dimension multivarié = 10
+nb exampe par classe = 400
+moyennes gaussienne = [0.5, ..., 0.5] et [-0.5, ..., -0.5]
+matrice covariance = identité
+batch_size = 1
+different feature space = 7
+score moyen teacher = ~750 / 800 (accuracy)
+nb itération = 500
+nb epoques teacher = 30
+projection matrix teacher = torch.rand
