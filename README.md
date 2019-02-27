@@ -13,7 +13,7 @@ $ python main.py [experience] [teacher]
 
 experience : `gaussian`, `mnist`, `cifar`
 
-teacher : `omni`, `surro_same`, `surro_diff`, `immi`
+teacher : `omni`, `surro_same`, `surro_diff`, `immi_same`, `immi_diff`
 
 __Exemple :__
 
