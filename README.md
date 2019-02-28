@@ -11,24 +11,37 @@ $ cd /path/to/IterativeMachineTeaching
 $ python main.py [experience] [teacher]
 ```
 
-experience : `gaussian`, `mnist`, `cifar`
+experience : 
+- `gaussian` : données gaussienne
+- `mnist` : données du MNIST
+- `cifar` : données du CIFAR-10
 
-teacher : `omni`, `surro_same`, `surro_diff`, `immi_same`, `immi_diff`
+teacher : 
+- `omni` : omniscient teacher
+- `surro_same` : surrogate teacher dans le même espace de features
+- `surro_diff` : surrogate teacher dans un espace de features différent
+- `immi_same` : immitation teacher dans le même espace de features
+- `immi_diff` : immitation teacher dans un espace de features différent
+
+__CIFAR__ : Executer le script `IterativeMachineTeaching/data/donwload_cifar.sh` dans le dossier 
+`IterativeMachineTeaching/data` pour télécharger les données ou simplement placer le dossier `cifar-10-batches-py` 
+contenant les données du CIFAR dans de la dossier `IterativeMachineTeaching/data`
 
 __Exemple :__
 
-
-omniscient teacher
+omniscient teacher sur les données gaussiennes
 ```bash
 $ python main.py gaussian omni
 ```
-surrogate teacher (same feature space)
+surrogate teacher (same feature space) sur les images du CIFAR
 ```bash
-$ python main.py gaussian surro_same
+$ python main.py cifar surro_same
 ```
-surrogate teacher (different feature space)
+immitation teacher (different feature space) sur les chiffres du MNIST
 ```bash
-$ python main.py gaussian surro_diff
+$ python main.py mnist immi_diff
 ```
 
-__CIFAR__ : Executer le script donwload_cifar.sh dans le dossier `IterativeMachineTeaching/data`
+## Note
+Les teachers utilisant un espace de features différent du student ne sont pas disponibles pour le CIFAR
+(plus simplement ils ne sont pas disponibles pour les réseaux de neurones à convolutions).
