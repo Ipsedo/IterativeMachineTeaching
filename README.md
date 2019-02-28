@@ -45,3 +45,5 @@ $ python main.py mnist immi_diff
 ## Note
 Les teachers utilisant un espace de features différent du student ne sont pas disponibles pour le CIFAR
 (plus simplement ils ne sont pas disponibles pour les réseaux de neurones à convolutions).
+
+Pour le CIFAR, l'utilisation de CUDA est activée par défaut. Pour lancer sur le cpu il suffit de supprimer tout les `.cuda()` contenus dans les fichiers `experiences/cifar10.py`,  `teachers/immitation_teacher.py` et `teachers/utils.py` avec la commande `sed` par exemple. 
