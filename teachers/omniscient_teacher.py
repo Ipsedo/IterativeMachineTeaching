@@ -89,6 +89,11 @@ def __select_example__(teacher, student, X, y, batch_size):
     min_score = sys.float_info.max
     arg_min = 0
 
+    # TODO
+    # - one "forward" scoring pass
+    # - sort n * log(n)
+    # - get first examples
+
     for i in range(nb_batch):
         # récupération des indices du batch
         i_min = i * batch_size

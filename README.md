@@ -4,6 +4,14 @@ Projet de l'option 6 Apprentissage Avancé sur l'article [Iterative Machine Teac
 
 Malik Kazi-Aoual, David Biard, Samuel Berrien, Nouredine Nour
 
+
+## TODO
+* argparse
+* optimizations
+* code refactoring
+* new bench
+* [without teacher](https://arxiv.org/abs/2006.15339)
+
 ## Usage
 
 ```bash

@@ -61,6 +61,11 @@ def __select_example__(teacher, student, X, y, batch_size, is_same_feature_space
     min_score = sys.float_info.max
     arg_min = 0
 
+    # TODO
+    # - one "forward" scoring pass
+    # - sort n * log(n)
+    # - get first examples
+
     # On itère sur les données
     for i in range(nb_batch):
         i_min = i * batch_size
