@@ -87,13 +87,13 @@ def train_mnist(
 
     # Train teacher
     nb_epoch_teacher = 50
-    batch_size = 32
-    nb_batch = x_train.size()[0] // batch_size
+    batch_size_teacher = 32
+    nb_batch_teacher = x_train.size()[0] // batch_size_teacher
 
     for e in range(nb_epoch_teacher):
-        for b_idx in range(nb_batch):
-            i_min = b_idx * batch_size
-            i_max = (b_idx + 1) * batch_size
+        for b_idx in range(nb_batch_teacher):
+            i_min = b_idx * batch_size_teacher
+            i_max = (b_idx + 1) * batch_size_teacher
 
             _ = teacher.train(x_train[i_min:i_max], y_train[i_min:i_max])
 
@@ -103,6 +103,9 @@ def train_mnist(
         print(f"Epoch {e} : nb_correct (TP and TN) = {nb_correct} / {x_test.size()[0]}")
 
     # train example
+    batch_size = 8
+    nb_batch = x_train.size()[0] // batch_size
+
     example = ModelWrapper(
         LinearClf(784), learning_rate
     )
