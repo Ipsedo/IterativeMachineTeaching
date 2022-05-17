@@ -16,7 +16,7 @@ Malik Kazi-Aoual, David Biard, Samuel Berrien, Nouredine Nour
 
 ```bash
 $ cd /path/to/IterativeMachineTeaching
-$ python main.py [experience] [teacher]
+$ python __main__.py [experience] [teacher]
 ```
 
 experience : 
@@ -39,15 +39,15 @@ __Exemple :__
 
 omniscient teacher sur les données gaussiennes
 ```bash
-$ python main.py gaussian omni
+$ python __main__.py gaussian omni
 ```
 surrogate teacher (same feature space) sur les images du CIFAR
 ```bash
-$ python main.py cifar surro_same
+$ python __main__.py cifar surro_same
 ```
 immitation teacher (different feature space) sur les chiffres du MNIST
 ```bash
-$ python main.py mnist immi_diff
+$ python __main__.py mnist immi_diff
 ```
 
 ## Note

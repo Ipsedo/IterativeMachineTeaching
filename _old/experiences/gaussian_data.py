@@ -1,7 +1,13 @@
-import teachers.omniscient_teacher as omni
-import teachers.surrogate_teacher as surro
-import teachers.imitation_teacher as immi
-import teachers.utils as utils
+from ..teachers import (
+    BaseLinear,
+    ImitationLinearTeacher,
+    ImitationDiffLinearTeacher,
+    OmniscientLinearStudent,
+    OmniscientLinearTeacher,
+    SurrogateLinearTeacher,
+    SurrogateDiffLinearTeacher,
+    SurrogateLinearStudent
+)
 import numpy as np
 import matplotlib.pyplot as plt
 import torch as th
@@ -40,30 +46,30 @@ def gaussian_main(teacher_type):
     X, y = init_data(dim, nb_data_per_class)
 
     # définition de l'exemple
-    example = utils.BaseLinear(dim)
+    example = BaseLinear(dim)
 
     # Selection du student et du teacher
     if teacher_type == "omni":
-        teacher = omni.OmniscientLinearTeacher(dim)
-        student = omni.OmniscientLinearStudent(dim)
+        teacher = OmniscientLinearTeacher(dim)
+        student = OmniscientLinearStudent(dim)
         teacher_name = "omniscient teacher"
     elif teacher_type == "surro_same":
-        teacher = surro.SurrogateLinearTeacher(dim)
-        student = surro.SurrogateLinearStudent(dim)
+        teacher = SurrogateLinearTeacher(dim)
+        student = SurrogateLinearStudent(dim)
         teacher_name = "surrogate teacher (same feature space)"
     elif teacher_type == "surro_diff":
-        teacher = surro.SurrogateDiffLinearTeacher(dim, dim__diff, normal_dist=False)
-        student = surro.SurrogateLinearStudent(dim)
+        teacher = SurrogateDiffLinearTeacher(dim, dim__diff, normal_dist=False)
+        student = SurrogateLinearStudent(dim)
         teacher_name = "surrogate teacher (different feature space)"
     elif teacher_type == "immi_same":
         fst_x = th.Tensor(X[th.randint(0, X.shape[0], (1,)).item()])
-        teacher = immi.ImitationLinearTeacher(dim, fst_x)
-        student = utils.BaseLinear(dim)
+        teacher = ImitationLinearTeacher(dim, fst_x)
+        student = BaseLinear(dim)
         teacher_name = "immitation teacher (same feature space)"
     elif teacher_type == "immi_diff":
         fst_x = th.Tensor(X[th.randint(0, X.shape[0], (1,)).item()])
-        teacher = immi.ImitationDiffLinearTeacher(dim, dim__diff, fst_x, normal_dist=False)
-        student = utils.BaseLinear(dim)
+        teacher = ImitationDiffLinearTeacher(dim, dim__diff, fst_x, normal_dist=False)
+        student = BaseLinear(dim)
         teacher_name = "immitation teacher (different feature space)"
     else:
         print("Unrecognized teacher !")

@@ -1,4 +1,4 @@
-from teachers.utils import BaseLinear, BaseConv
+from .utils import BaseLinear, BaseConv
 import sys
 import torch as th
 import copy
