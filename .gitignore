@@ -5,3 +5,4 @@ build/
 dist/
 .ipynb_checkpoints/
 venv/
+iterative_machine_teaching.egg-info/
