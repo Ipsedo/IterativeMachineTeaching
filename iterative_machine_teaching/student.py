@@ -4,11 +4,11 @@ import torch as th
 import torch.nn as nn
 import torch.autograd as th_autograd
 
-from .networks import Clf, ModelWrapper
+from .networks import Classifier, ModelWrapper
 
 
 class Student(ABC, ModelWrapper):
-    def __init__(self, clf: Clf, learning_rate: float):
+    def __init__(self, clf: Classifier, learning_rate: float):
         super(Student, self).__init__(clf, learning_rate)
 
         self._loss_fn_reduction_none = nn.MSELoss(reduction='none')
@@ -18,7 +18,7 @@ class Student(ABC, ModelWrapper):
         pass
 
     @abstractmethod
-    def example_usefulness(self, teacher: Clf, x: th.Tensor, y: th.Tensor) -> th.Tensor:
+    def example_usefulness(self, teacher: Classifier, x: th.Tensor, y: th.Tensor) -> th.Tensor:
         pass
 
     def get_eta(self) -> float:
@@ -27,7 +27,7 @@ class Student(ABC, ModelWrapper):
 
 class OmniscientStudent(Student):
 
-    def __get_weight_gradient(self, x: th.Tensor, y: th.Tensor) -> th.Tensor:
+    def _get_weight_gradient(self, x: th.Tensor, y: th.Tensor) -> th.Tensor:
         out = self._clf(x)
         out = self._loss_fn_reduction_none(out, y)
 
@@ -43,15 +43,32 @@ class OmniscientStudent(Student):
         )[0]
 
     def example_difficulty(self, x: th.Tensor, y: th.Tensor) -> th.Tensor:
-        gradients_weight = self.__get_weight_gradient(x, y)
-
-        return th.norm(gradients_weight, dim=[1, 2]) ** 2
-
-    def example_usefulness(self, teacher: Clf, x: th.Tensor, y: th.Tensor) -> th.Tensor:
-        gradients_weight = self.__get_weight_gradient(x, y)
+        gradients_weight = self._get_weight_gradient(x, y)
 
         batch_size = x.size()[0]
 
-        diff = gradients_weight - teacher.clf.weight[None, :, :]
+        return th.norm(gradients_weight.view(batch_size, -1), dim=1) ** 2
 
-        return (gradients_weight.view(batch_size, -1) * diff.view(batch_size, -1)).sum(dim=1)
+    def example_usefulness(self, teacher: Classifier, x: th.Tensor, y: th.Tensor) -> th.Tensor:
+        gradients_weight = self._get_weight_gradient(x, y)
+
+        batch_size = x.size()[0]
+
+        diff = self._clf.clf.weight - teacher.clf.weight
+
+        return (
+                diff[None, :, :].view(1, -1) *
+                gradients_weight.view(batch_size, -1)
+        ).sum(dim=1)
+
+
+class SurrogateStudent(OmniscientStudent):
+    def example_usefulness(self, teacher: Classifier, x: th.Tensor, y: th.Tensor) -> th.Tensor:
+        out_student = self._clf(x)
+        out_teacher = teacher(x)
+
+        loss_student = self._loss_fn_reduction_none(out_student, y)
+        loss_teacher = self._loss_fn_reduction_none(out_teacher, y)
+
+        return loss_student - loss_teacher
+

@@ -6,9 +6,9 @@ from tqdm import tqdm
 
 import matplotlib.pyplot as plt
 
-from .networks import Clf, LinearClf, ModelWrapper
-from .teachers import Teacher, OmniscientTeacher
-from .student import Student, OmniscientStudent
+from .networks import Classifier, LinearClassifier, ModelWrapper
+from .teachers import Teacher, OmniscientTeacher, SurrogateTeacher
+from .student import Student, OmniscientStudent, SurrogateStudent
 
 from .data import load_mnist
 
@@ -18,10 +18,14 @@ class Kind(Enum):
     SURROGATE = "SURROGATE"
     IMITATION = "IMITATION"
 
-    def get_teacher(self, clf: Clf, learning_rate: float, batch_size: int) -> Teacher:
+    def get_teacher(self, clf: Classifier, learning_rate: float, batch_size: int) -> Teacher:
         # TODO 3.10 switch
         if self == self.OMNISCIENT:
             return OmniscientTeacher(
+                clf, learning_rate, batch_size
+            )
+        elif self == self.SURROGATE:
+            return SurrogateTeacher(
                 clf, learning_rate, batch_size
             )
         else:
@@ -29,10 +33,14 @@ class Kind(Enum):
                 "Only omniscient is implemented."
             )
 
-    def get_student(self, clf: Clf, learning_rate: float) -> Student:
+    def get_student(self, clf: Classifier, learning_rate: float) -> Student:
         # TODO 3?10 switch
         if self == self.OMNISCIENT:
             return OmniscientStudent(
+                clf, learning_rate
+            )
+        elif self == self.SURROGATE:
+            return SurrogateStudent(
                 clf, learning_rate
             )
         else:
@@ -74,16 +82,14 @@ def train_mnist(
     y_test = y[limit_train:]
 
     # create models
-    student_model = LinearClf(784)
-    teacher_model = LinearClf(784)
+    student_model = LinearClassifier(784)
+    teacher_model = LinearClassifier(784)
 
     # create student and teacher
     learning_rate = 1e-4
 
     student = kind.get_student(student_model, learning_rate)
     teacher = kind.get_teacher(teacher_model, learning_rate, 256)
-
-    rounds = 1024
 
     # Train teacher
     nb_epoch_teacher = 50
@@ -102,12 +108,14 @@ def train_mnist(
         nb_correct = (out_test == y_test).sum().item()
         print(f"Epoch {e} : nb_correct (TP and TN) = {nb_correct} / {x_test.size()[0]}")
 
-    # train example
-    batch_size = 8
+    # For comparison
+    rounds = 2048
+    batch_size = 32
     nb_batch = x_train.size()[0] // batch_size
 
+    # train example
     example = ModelWrapper(
-        LinearClf(784), learning_rate
+        LinearClassifier(784), learning_rate
     )
 
     print("\nEntrainement de l'exemple")
@@ -157,7 +165,7 @@ def train_mnist(
     plt.plot(loss_values_student, c='magenta', label="student - loss")
     plt.plot(accuracy_student, c='red', label="student - accuracy")
 
-    plt.title("MNIST Linear model (class : " + str(first_class) + ", " + str(second_class) + ")")
+    plt.title(f"MNIST Linear ({kind}) (class : " + str(first_class) + ", " + str(second_class) + ")")
     plt.xlabel("Iteration")
     plt.legend()
     plt.show()

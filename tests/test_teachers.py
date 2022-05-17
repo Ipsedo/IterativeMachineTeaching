@@ -2,7 +2,7 @@ import unittest
 
 import torch as th
 
-from iterative_machine_teaching.networks import LinearClf
+from iterative_machine_teaching.networks import LinearClassifier
 from iterative_machine_teaching.teachers import OmniscientTeacher
 from iterative_machine_teaching.student import OmniscientStudent
 
@@ -17,10 +17,10 @@ class TestTeacher(unittest.TestCase):
         x = th.randn(self.__nb_example, 16)
         y = th.randint(2, (self.__nb_example,)).to(th.float)
 
-        s_model = LinearClf(16)
+        s_model = LinearClassifier(16)
         student = OmniscientStudent(s_model)
 
-        t_model = LinearClf(16)
+        t_model = LinearClassifier(16)
         teacher = OmniscientTeacher(t_model, self.__batch_size)
 
         top_data, top_label = teacher.select_n_examples(student, x, y, self.__top_n)

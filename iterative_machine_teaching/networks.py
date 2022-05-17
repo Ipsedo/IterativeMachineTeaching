@@ -4,19 +4,19 @@ import torch as th
 import torch.nn as nn
 
 
-class Clf(ABC, nn.Module):
+class Classifier(ABC, nn.Module):
     @property
     @abstractmethod
     def clf(self) -> nn.Linear:
         pass
 
 
-class LinearClf(Clf):
+class LinearClassifier(Classifier):
     def __init__(
             self,
             input_dim: int
     ):
-        super(LinearClf, self).__init__()
+        super(LinearClassifier, self).__init__()
 
         self.__seq = nn.Sequential(
             nn.Linear(input_dim, 1),
@@ -31,9 +31,9 @@ class LinearClf(Clf):
         return self.__seq(x).view(-1)
 
 
-class Cifar10Clf(Clf):
+class Cifar10Classifier(Classifier):
     def __init__(self):
-        super(Cifar10Clf, self).__init__()
+        super(Cifar10Classifier, self).__init__()
 
         self.__seq = nn.Sequential(
             nn.Conv2d(
@@ -96,7 +96,7 @@ class Cifar10Clf(Clf):
 
 
 class ModelWrapper(object):
-    def __init__(self, clf: Clf, learning_rate: float):
+    def __init__(self, clf: Classifier, learning_rate: float):
         super(ModelWrapper, self).__init__()
 
         self._clf = clf

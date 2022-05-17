@@ -3,12 +3,12 @@ from typing import Tuple
 
 import torch as th
 
-from .networks import Clf, ModelWrapper
+from .networks import Classifier, ModelWrapper
 from .student import Student
 
 
 class Teacher(ABC, ModelWrapper):
-    def __init__(self, clf: Clf, learning_rate: float, batch_size: int):
+    def __init__(self, clf: Classifier, learning_rate: float, batch_size: int):
         super(Teacher, self).__init__(clf, learning_rate)
 
         self._batch_size = batch_size
@@ -16,6 +16,14 @@ class Teacher(ABC, ModelWrapper):
     @abstractmethod
     def select_n_examples(self, student: Student, x: th.Tensor, y: th.Tensor, n: int) -> Tuple[th.Tensor, th.Tensor]:
         pass
+
+    def __str__(self):
+        return f"{self.__class__.__name__}(" \
+               f"clf={self._clf}," \
+               f"batch_size={self._batch_size})"
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class OmniscientTeacher(Teacher):
@@ -52,3 +60,8 @@ class OmniscientTeacher(Teacher):
 
         # et on retourne les exemples associés
         return th.index_select(x, 0, top_n), th.index_select(y, 0, top_n)
+
+
+class SurrogateTeacher(OmniscientTeacher):
+    # Same as omniscient teacher
+    pass
