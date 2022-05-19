@@ -11,7 +11,6 @@ def load_mnist(pickle_path: str) -> Tuple[th.Tensor, th.Tensor]:
     train_set, valid_set, test_set = pickle.load(f, encoding='latin-1')
     f.close()
 
-    # Shuffle
     train_x = th.from_numpy(train_set[0])
     train_y = th.from_numpy(train_set[1])
 
@@ -23,6 +22,32 @@ def load_mnist(pickle_path: str) -> Tuple[th.Tensor, th.Tensor]:
 
     x = th.cat([train_x, valid_x, test_x], dim=0)
     y = th.cat([train_y, valid_y, test_y], dim=0)
+
+    rand_perm = th.randperm(x.size()[0])
+
+    x = th.index_select(x, 0, rand_perm)
+    y = th.index_select(y, 0, rand_perm)
+
+    return x, y
+
+
+def load_gaussian(dim: int, nb_data_per_class: int):
+    mv_norm_1 = th.distributions.multivariate_normal.MultivariateNormal(
+        0.5 * th.ones(dim), th.eye(dim)
+    )
+
+    x1 = mv_norm_1.sample(nb_data_per_class)
+    y1 = th.ones(nb_data_per_class)
+
+    mv_norm_2 = th.distributions.multivariate_normal.MultivariateNormal(
+        -0.5 * th.ones(dim), th.eye(dim)
+    )
+
+    x2 = mv_norm_2.sample(nb_data_per_class)
+    y2 = th.zeros(nb_data_per_class)
+
+    x = th.cat([x1, x2], dim=0)
+    y = th.cat([y1, y2], dim=0)
 
     rand_perm = th.randperm(x.size()[0])
 
