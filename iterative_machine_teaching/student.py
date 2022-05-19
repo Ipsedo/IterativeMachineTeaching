@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+from typing import Callable
+
 import torch as th
 import torch.nn as nn
 import torch.autograd as th_autograd
@@ -11,7 +13,7 @@ class Student(ABC, ModelWrapper):
     def __init__(self, clf: Classifier, learning_rate: float):
         super(Student, self).__init__(clf, learning_rate)
 
-        self._loss_fn_reduction_none = nn.MSELoss(reduction='none')
+        self._loss_fn_reduction_none = nn.CrossEntropyLoss(reduction='none')
 
     @abstractmethod
     def example_difficulty(self, x: th.Tensor, y: th.Tensor) -> th.Tensor:
@@ -36,9 +38,11 @@ class OmniscientStudent(Student):
 
         return th_autograd.grad(
             outputs=out,
-            inputs=self._clf.clf.weight,
-            grad_outputs=(th.eye(batch_size, device=device),),
-            create_graph=True, retain_graph=True,
+            inputs=self._clf.linear.weight,
+            # for output dim (which is 1) : N * 1
+            grad_outputs=(th.eye(batch_size * 1, device=device),),
+            retain_graph=True,
+            create_graph=True,
             is_grads_batched=True
         )[0]
 
@@ -54,10 +58,10 @@ class OmniscientStudent(Student):
 
         batch_size = x.size()[0]
 
-        diff = self._clf.clf.weight - teacher.clf.weight
+        diff = self._clf.linear.weight - teacher.linear.weight
 
         return (
-                diff[None, :, :].view(1, -1) *
+                diff.view(1, -1) *
                 gradients_weight.view(batch_size, -1)
         ).sum(dim=1)
 
@@ -72,3 +76,11 @@ class SurrogateStudent(OmniscientStudent):
 
         return loss_student - loss_teacher
 
+
+class ImitationStudent(Student):
+
+    def example_difficulty(self, x: th.Tensor, y: th.Tensor) -> th.Tensor:
+        raise NotImplemented("Imitation teacher doesn't need this")
+
+    def example_usefulness(self, teacher: Classifier, x: th.Tensor, y: th.Tensor) -> th.Tensor:
+        raise NotImplemented("Imitation teacher doesn't need this")

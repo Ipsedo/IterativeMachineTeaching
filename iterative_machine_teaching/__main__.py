@@ -11,14 +11,6 @@ def main() -> None:
     )
 
     parser.add_argument(
-        "first_class", type=int, choices=list(range(10))
-    )
-
-    parser.add_argument(
-        "second_class", type=int, choices=list(range(10))
-    )
-
-    parser.add_argument(
         "input_pickle", type=str
     )
 
@@ -26,8 +18,6 @@ def main() -> None:
 
     train_mnist(
         args.input_pickle,
-        args.first_class,
-        args.second_class,
         args.kind
     )
 

@@ -12,10 +12,10 @@ class TestStudent(unittest.TestCase):
 
     def test_example_difficulty(self):
         x = th.randn(self.__batch_size, 16)
-        y = th.randint(2, (self.__batch_size,)).to(th.float)
+        y = th.randint(3, (self.__batch_size,))
 
-        model = LinearClassifier(16)
-        student = OmniscientStudent(model)
+        model = LinearClassifier(16, 3)
+        student = OmniscientStudent(model, 1e-3)
 
         out = student.example_difficulty(x, y)
 
@@ -27,12 +27,12 @@ class TestStudent(unittest.TestCase):
 
     def test_example_usefulness(self):
         x = th.randn(self.__batch_size, 16)
-        y = th.randint(2, (self.__batch_size,)).to(th.float)
+        y = th.randint(3, (self.__batch_size,))
 
-        model = LinearClassifier(16)
-        student = OmniscientStudent(model)
+        model = LinearClassifier(16, 3)
+        student = OmniscientStudent(model, 1e-3)
 
-        teacher = LinearClassifier(16)
+        teacher = LinearClassifier(16, 3)
 
         out = student.example_usefulness(teacher, x, y)
 

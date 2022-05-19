@@ -7,32 +7,32 @@ import torch.nn as nn
 class Classifier(ABC, nn.Module):
     @property
     @abstractmethod
-    def clf(self) -> nn.Linear:
+    def linear(self) -> nn.Linear:
         pass
 
 
 class LinearClassifier(Classifier):
     def __init__(
             self,
-            input_dim: int
+            input_dim: int,
+            output_dim: int
     ):
         super(LinearClassifier, self).__init__()
 
         self.__seq = nn.Sequential(
-            nn.Linear(input_dim, 1),
-            nn.Sigmoid()
+            nn.Linear(input_dim, output_dim)
         )
 
     @property
-    def clf(self) -> nn.Linear:
+    def linear(self) -> nn.Linear:
         return self.__seq[0]
 
     def forward(self, x: th.Tensor) -> th.Tensor:
-        return self.__seq(x).view(-1)
+        return self.__seq(x)
 
 
 class Cifar10Classifier(Classifier):
-    def __init__(self):
+    def __init__(self, output_size: int):
         super(Cifar10Classifier, self).__init__()
 
         self.__seq = nn.Sequential(
@@ -82,17 +82,16 @@ class Cifar10Classifier(Classifier):
 
             nn.Linear(
                 2 * 2 * 24,
-                1
-            ),
-            nn.Sigmoid()
+                output_size
+            )
         )
 
     @property
-    def clf(self) -> nn.Linear:
+    def linear(self) -> nn.Linear:
         return self.__seq[-2]
 
     def forward(self, x: th.Tensor) -> th.Tensor:
-        return self.__seq(x).view(-1)
+        return self.__seq(x)
 
 
 class ModelWrapper(object):
@@ -100,7 +99,7 @@ class ModelWrapper(object):
         super(ModelWrapper, self).__init__()
 
         self._clf = clf
-        self._loss_fn = nn.MSELoss(reduction='mean')
+        self._loss_fn = nn.CrossEntropyLoss(reduction='mean')
         self._optim = th.optim.SGD(
             self._clf.parameters(),
             lr=learning_rate
