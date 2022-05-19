@@ -1,14 +1,14 @@
 import argparse
 
 from .data import load_mnist, load_gaussian
-from .train import train, Kind
+from .train import train, TeachingType
 
 
 def main() -> None:
     parser = argparse.ArgumentParser("IterativeMachineTeaching")
 
     parser.add_argument(
-        "kind", type=Kind, choices=list(Kind)
+        "kind", type=TeachingType, choices=list(TeachingType)
     )
 
     parser.add_argument(
@@ -26,9 +26,10 @@ def main() -> None:
     mnist_parser.add_argument("input_pickle", type=str)
 
     gaussian_parser = dataset_subparser.add_parser("gaussian")
-    gaussian_parser.add_argument("dim", type=int)
+    gaussian_parser.add_argument("-c", "--centers", type=int, default=2)
+    gaussian_parser.add_argument("-d", "--dim", type=int, default=8)
     gaussian_parser.add_argument(
-        "-n", "--nb-example", type=int, default=2000
+        "-n", "--per-class-example", type=int, default=512
     )
 
     args = parser.parse_args()
@@ -36,7 +37,7 @@ def main() -> None:
     if args.dataset == "mnist":
         dataset = load_mnist(args.input_pickle)
     elif args.dataset == "gaussian":
-        dataset = load_gaussian(args.dim, args.nb_example // 2)
+        dataset = load_gaussian(args.centers, args.dim, args.per_class_example)
     else:
         raise Exception("Unrecognized dataset")
 

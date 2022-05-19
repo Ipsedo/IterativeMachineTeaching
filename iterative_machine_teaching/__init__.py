@@ -3,6 +3,6 @@ from .students import Student, OmniscientStudent, SurrogateStudent, ImitationStu
 
 from .networks import Classifier, LinearClassifier
 
-from .train import train
+from .train import train, TeachingType
 
 from .data import load_mnist, load_gaussian
