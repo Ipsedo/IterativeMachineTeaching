@@ -5,7 +5,7 @@ import torch as th
 
 from iterative_machine_teaching.networks import LinearClassifier
 from iterative_machine_teaching.teachers import Teacher, OmniscientTeacher, SurrogateTeacher, ImitationTeacher
-from iterative_machine_teaching.student import Student, OmniscientStudent, SurrogateStudent, ImitationStudent
+from iterative_machine_teaching.students import Student, OmniscientStudent, SurrogateStudent, ImitationStudent
 
 
 class TestTeacher(unittest.TestCase):

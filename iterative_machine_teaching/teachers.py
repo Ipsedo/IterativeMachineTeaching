@@ -8,7 +8,7 @@ import torch.autograd as th_autograd
 import torch.nn as nn
 
 from .networks import Classifier, ModelWrapper
-from .student import Student
+from .students import Student
 
 
 class Teacher(ABC, ModelWrapper):

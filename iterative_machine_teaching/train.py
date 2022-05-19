@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 from .networks import Classifier, LinearClassifier, ModelWrapper
 from .teachers import Teacher, OmniscientTeacher, SurrogateTeacher, ImitationTeacher
-from .student import Student, OmniscientStudent, SurrogateStudent, ImitationStudent
+from .students import Student, OmniscientStudent, SurrogateStudent, ImitationStudent
 
 from .data import load_mnist
 
@@ -61,7 +61,7 @@ def train_mnist(
 
     # create student and teacher
     learning_rate = 1e-3
-    research_batch_size = 128
+    research_batch_size = 512
 
     student = kind.get_student(student_model, learning_rate)
     teacher = kind.get_teacher(teacher_model, learning_rate, research_batch_size)
@@ -71,7 +71,8 @@ def train_mnist(
     batch_size_teacher = 32
     nb_batch_teacher = x_train.size()[0] // batch_size_teacher
 
-    for e in range(nb_epoch_teacher):
+    tqdm_bar = tqdm(range(nb_epoch_teacher))
+    for e in tqdm_bar:
         for b_idx in range(nb_batch_teacher):
             i_min = b_idx * batch_size_teacher
             i_max = (b_idx + 1) * batch_size_teacher
@@ -81,16 +82,16 @@ def train_mnist(
         out_test = teacher.predict(x_test)
         f1_score_value = f1_score(out_test, y_test, num_classes=num_classes).item()
 
-        print(f"Epoch {e} : F1-Score = {f1_score_value}")
+        tqdm_bar.set_description(f"Epoch {e} : F1-Score = {f1_score_value}")
 
     # For comparison
 
     # to avoid a lot of compute...
-    nb_example_train_student = 8192
+    nb_example_train_student = 16384
     x_train = x_train[:nb_example_train_student]
     y_train = y_train[:nb_example_train_student]
 
-    rounds = 2048
+    rounds = 1024
     batch_size = 16
     nb_batch = x_train.size()[0] // batch_size
 

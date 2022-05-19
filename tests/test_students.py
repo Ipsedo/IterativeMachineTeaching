@@ -3,7 +3,7 @@ import unittest
 import torch as th
 
 from iterative_machine_teaching.networks import LinearClassifier
-from iterative_machine_teaching.student import OmniscientStudent
+from iterative_machine_teaching.students import OmniscientStudent
 
 
 class TestStudent(unittest.TestCase):
