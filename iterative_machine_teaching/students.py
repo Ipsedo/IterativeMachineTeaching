@@ -39,7 +39,7 @@ class OmniscientStudent(Student):
         return th_autograd.grad(
             outputs=out,
             inputs=self._clf.linear.weight,
-            # for output dim (which is 1) : N * 1
+            # for loss output dim (which is 1) : N * 1
             grad_outputs=(th.eye(batch_size * 1, device=device),),
             retain_graph=True,
             create_graph=True,

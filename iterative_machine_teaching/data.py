@@ -36,15 +36,15 @@ def load_gaussian(dim: int, nb_data_per_class: int):
         0.5 * th.ones(dim), th.eye(dim)
     )
 
-    x1 = mv_norm_1.sample(nb_data_per_class)
-    y1 = th.ones(nb_data_per_class)
+    x1 = mv_norm_1.sample((nb_data_per_class,))
+    y1 = th.ones(nb_data_per_class, dtype=th.long)
 
     mv_norm_2 = th.distributions.multivariate_normal.MultivariateNormal(
         -0.5 * th.ones(dim), th.eye(dim)
     )
 
-    x2 = mv_norm_2.sample(nb_data_per_class)
-    y2 = th.zeros(nb_data_per_class)
+    x2 = mv_norm_2.sample((nb_data_per_class,))
+    y2 = th.zeros(nb_data_per_class, dtype=th.long)
 
     x = th.cat([x1, x2], dim=0)
     y = th.cat([y1, y2], dim=0)
