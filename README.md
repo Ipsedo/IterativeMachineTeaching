@@ -12,4 +12,4 @@
 
 # Beginning of this project
 
-Academic project of course 6 "Apprentissage Avancé", implementation of [Iterative Machine Teaching](https://arxiv.org/pdf/1705.10470.pdf).
+Academic project of course OPT6 "Apprentissage Avancé", implementation of [Iterative Machine Teaching](https://arxiv.org/pdf/1705.10470.pdf).

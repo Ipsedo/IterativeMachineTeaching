@@ -11,10 +11,5 @@ setup(
     author='Ipsedo',
     author_email='',
     description='Iterative Machine Teaching implementation',
-    entry_points={
-        'console_scripts': [
-            'iterative_machine_teaching = iterative_machine_teaching.__main__:main'
-        ]
-    },
     test_suite="tests"
 )

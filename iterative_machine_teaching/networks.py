@@ -19,16 +19,14 @@ class LinearClassifier(Classifier):
     ):
         super(LinearClassifier, self).__init__()
 
-        self.__seq = nn.Sequential(
-            nn.Linear(input_dim, output_dim)
-        )
+        self.__lin = nn.Linear(input_dim, output_dim)
 
     @property
     def linear(self) -> nn.Linear:
-        return self.__seq[0]
+        return self.__lin
 
     def forward(self, x: th.Tensor) -> th.Tensor:
-        return self.__seq(x)
+        return self.__lin(x)
 
 
 class Cifar10Classifier(Classifier):
@@ -88,7 +86,7 @@ class Cifar10Classifier(Classifier):
 
     @property
     def linear(self) -> nn.Linear:
-        return self.__seq[-2]
+        return self.__seq[-1]
 
     def forward(self, x: th.Tensor) -> th.Tensor:
         return self.__seq(x)
@@ -99,23 +97,25 @@ class ModelWrapper(object):
         super(ModelWrapper, self).__init__()
 
         self._clf = clf
-        self._loss_fn = nn.CrossEntropyLoss(reduction='mean')
-        self._optim = th.optim.SGD(
+
+        self.__loss_fn = nn.CrossEntropyLoss(reduction='mean')
+        self.__optim = th.optim.SGD(
             self._clf.parameters(),
             lr=learning_rate
         )
 
-        self._eta = learning_rate
-
     def train(self, x: th.Tensor, y: th.Tensor) -> float:
         out = self._clf(x)
-        loss = self._loss_fn(out, y)
+        loss = self.__loss_fn(out, y)
 
-        self._optim.zero_grad()
+        self.__optim.zero_grad()
         loss.backward()
-        self._optim.step()
+        self.__optim.step()
 
         return loss.item()
 
     def predict(self, x: th.Tensor) -> th.Tensor:
         return self._clf(x)
+
+    def get_eta(self) -> float:
+        return self.__optim.param_groups[0]["lr"]

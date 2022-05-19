@@ -31,23 +31,20 @@ def load_mnist(pickle_path: str) -> Tuple[th.Tensor, th.Tensor]:
     return x, y
 
 
-def load_gaussian(dim: int, nb_data_per_class: int):
-    mv_norm_1 = th.distributions.multivariate_normal.MultivariateNormal(
-        0.5 * th.ones(dim), th.eye(dim)
-    )
+def load_gaussian(nb_gaussian: int, dim: int, nb_data_per_class: int) -> Tuple[th.Tensor, th.Tensor]:
+    x = []
+    y = []
 
-    x1 = mv_norm_1.sample((nb_data_per_class,))
-    y1 = th.ones(nb_data_per_class, dtype=th.long)
+    for i in range(nb_gaussian):
+        multivariate_dist = th.distributions.multivariate_normal.MultivariateNormal(
+            th.rand(dim) * 2.0, th.eye(dim)
+        )
 
-    mv_norm_2 = th.distributions.multivariate_normal.MultivariateNormal(
-        -0.5 * th.ones(dim), th.eye(dim)
-    )
+        x.append(multivariate_dist.sample((nb_data_per_class,)))
+        y.append(th.ones(nb_data_per_class, dtype=th.long) * i)
 
-    x2 = mv_norm_2.sample((nb_data_per_class,))
-    y2 = th.zeros(nb_data_per_class, dtype=th.long)
-
-    x = th.cat([x1, x2], dim=0)
-    y = th.cat([y1, y2], dim=0)
+    x = th.cat(x, dim=0)
+    y = th.cat(y, dim=0)
 
     rand_perm = th.randperm(x.size()[0])
 

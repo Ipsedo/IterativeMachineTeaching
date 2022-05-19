@@ -14,7 +14,7 @@ from .teachers import Teacher, OmniscientTeacher, SurrogateTeacher, ImitationTea
 from .students import Student, OmniscientStudent, SurrogateStudent, ImitationStudent
 
 
-class Kind(Enum):
+class TeachingType(Enum):
     OMNISCIENT = "OMNISCIENT"
     SURROGATE = "SURROGATE"
     IMITATION = "IMITATION"
@@ -22,22 +22,22 @@ class Kind(Enum):
     @staticmethod
     def __constructors():
         return {
-            Kind.OMNISCIENT: (OmniscientTeacher, OmniscientStudent),
-            Kind.SURROGATE: (SurrogateTeacher, SurrogateStudent),
-            Kind.IMITATION: (ImitationTeacher, ImitationStudent),
+            TeachingType.OMNISCIENT: (OmniscientTeacher, OmniscientStudent),
+            TeachingType.SURROGATE: (SurrogateTeacher, SurrogateStudent),
+            TeachingType.IMITATION: (ImitationTeacher, ImitationStudent),
         }
 
     def get_teacher(self, clf: Classifier, learning_rate: float, batch_size: int) -> Teacher:
-        return Kind.__constructors()[self][0](clf, learning_rate, batch_size)
+        return TeachingType.__constructors()[self][0](clf, learning_rate, batch_size)
 
     def get_student(self, clf: Classifier, learning_rate: float) -> Student:
-        return Kind.__constructors()[self][1](clf, learning_rate)
+        return TeachingType.__constructors()[self][1](clf, learning_rate)
 
 
 def train(
     dataset: Tuple[th.Tensor, th.Tensor],
     dataset_name: str,
-    kind: Kind,
+    kind: TeachingType,
     example_nb_student: int
 ) -> None:
 
@@ -46,7 +46,7 @@ def train(
     num_features = x.size()[1]  # 784
     num_classes = th.unique(y).size()[0]  # 10
 
-    print(f"Dataset \"{dataset_name}\" of {x.size()[0]} examples.")
+    print(f"Dataset \"{dataset_name}\" of {x.size()[0]} examples with {kind.value} teacher.")
 
     ratio_train = 4. / 5.
     limit_train = int(x.size()[0] * ratio_train)

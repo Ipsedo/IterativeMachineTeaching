@@ -23,13 +23,10 @@ class Student(ABC, ModelWrapper):
     def example_usefulness(self, teacher: Classifier, x: th.Tensor, y: th.Tensor) -> th.Tensor:
         pass
 
-    def get_eta(self) -> float:
-        return self._optim.param_groups[0]["lr"]
-
 
 class OmniscientStudent(Student):
 
-    def _get_weight_gradient(self, x: th.Tensor, y: th.Tensor) -> th.Tensor:
+    def __get_weight_gradient(self, x: th.Tensor, y: th.Tensor) -> th.Tensor:
         out = self._clf(x)
         out = self._loss_fn_reduction_none(out, y)
 
@@ -47,14 +44,14 @@ class OmniscientStudent(Student):
         )[0]
 
     def example_difficulty(self, x: th.Tensor, y: th.Tensor) -> th.Tensor:
-        gradients_weight = self._get_weight_gradient(x, y)
+        gradients_weight = self.__get_weight_gradient(x, y)
 
         batch_size = x.size()[0]
 
         return th.norm(gradients_weight.view(batch_size, -1), dim=1) ** 2
 
     def example_usefulness(self, teacher: Classifier, x: th.Tensor, y: th.Tensor) -> th.Tensor:
-        gradients_weight = self._get_weight_gradient(x, y)
+        gradients_weight = self.__get_weight_gradient(x, y)
 
         batch_size = x.size()[0]
 
@@ -78,7 +75,6 @@ class SurrogateStudent(OmniscientStudent):
 
 
 class ImitationStudent(Student):
-
     def example_difficulty(self, x: th.Tensor, y: th.Tensor) -> th.Tensor:
         raise NotImplemented("Imitation teacher doesn't need this")
 

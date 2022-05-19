@@ -137,7 +137,7 @@ class ImitationTeacher(Teacher):
         out_student = student.predict(self.__last_n_examples)
         out_imitation = self.__imitation(self.__last_n_examples)
 
-        eta = self._eta
+        eta = self.get_eta()
 
         self.__imitation.linear.weight.data = (
             self.__imitation.linear.weight.data -
