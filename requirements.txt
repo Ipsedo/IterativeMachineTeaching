@@ -1,0 +1,6 @@
+torch
+torchmetrics
+matplotlib
+tqdm
+numpy
+jupyter

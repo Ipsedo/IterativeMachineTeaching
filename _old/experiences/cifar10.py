@@ -1,9 +1,14 @@
-import data.dataset_loader as data_loader
 import matplotlib.pyplot as plt
-import teachers.omniscient_teacher as omni
-import teachers.surrogate_teacher as surro
-import teachers.imitation_teacher as immi
-import teachers.utils as utils
+from ..teachers import (
+    ImmitationConvTeacher,
+    OmniscientConvTeacher,
+    SurrogateConvTeacher,
+
+    SurrogateConvStudent,
+    OmniscientConvStudent,
+    BaseConv
+)
+from ..data import load_cifar10_2, cifar10_proper_array
 import numpy as np
 import torch as th
 import sys
@@ -14,7 +19,7 @@ import copy
 def cifar10_main(teacher_type):
 
     # Chargelent des données
-    data, labels = data_loader.load_cifar10_2()
+    data, labels = load_cifar10_2()
     labels = labels.reshape(-1)
 
     nb_example = 9000
@@ -28,7 +33,7 @@ def cifar10_main(teacher_type):
     data, labels = data[f], labels[f]
 
     # Mise en bonne dimension des données
-    data = data_loader.cifar10_proper_array(data)
+    data = cifar10_proper_array(data)
 
     # séléction du bon nombre de données
     data, labels = data[:nb_example + nb_test], labels[:nb_example + nb_test]
@@ -49,17 +54,17 @@ def cifar10_main(teacher_type):
 
     # Séléction du teacher
     if teacher_type == "omni":
-        teacher = omni.OmniscientConvTeacher(eta)
+        teacher = OmniscientConvTeacher(eta)
         teacher_name = "omniscient teacher"
     elif teacher_type == "surro_same":
-        teacher = surro.SurrogateConvTeacher(eta)
+        teacher = SurrogateConvTeacher(eta)
         teacher_name = "surrogate teacher (same feature space)"
     elif teacher_type == "surro_diff":
         print("Unsuported teacher for CIFAR-10 (%s) !" % teacher_type)
         sys.exit()
     elif teacher_type == "immi_same":
         fst_x = th.Tensor(data[th.randint(0, data.shape[0], (1,)).item()]).unsqueeze(0).cuda()
-        teacher = immi.ImmitationConvTeacher(eta, fst_x)
+        teacher = ImmitationConvTeacher(eta, fst_x)
         teacher_name = "immitation teacher (same feature space)"
     elif teacher_type == "immi_diff":
         print("Unsuported teacher for CIFAR-10 (%s) !" % teacher_type)
@@ -101,11 +106,11 @@ def cifar10_main(teacher_type):
 
     # Séléction du student
     if teacher_type == "omni":
-        student = omni.OmniscientConvStudent(eta)
+        student = OmniscientConvStudent(eta)
     elif teacher_type == "surro_same":
-        student = surro.SurrogateConvStudent(eta)
+        student = SurrogateConvStudent(eta)
     elif teacher_type == "immi_same":
-        student = utils.BaseConv(eta)
+        student = BaseConv(eta)
     elif teacher_type == "surro_diff":
         print("Unsuported teacher for CIFAR-10 (%s) !" % teacher_type)
         sys.exit()
@@ -117,7 +122,7 @@ def cifar10_main(teacher_type):
         sys.exit()
 
     # Création de l'exemple
-    example = utils.BaseConv(eta)
+    example = BaseConv(eta)
 
     # Copie des poids des convolution du teacher vers le student et l'exemple
     example.seq = copy.deepcopy(teacher.seq)

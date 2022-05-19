@@ -1,3 +1,8 @@
 __pycache__/
 .idea/
 cifar-10-batches-py/
+build/
+dist/
+.ipynb_checkpoints/
+venv/
+iterative_machine_teaching.egg-info/

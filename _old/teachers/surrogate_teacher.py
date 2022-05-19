@@ -1,5 +1,4 @@
-import torch as th
-from teachers.utils import *
+from .utils import *
 import sys
 
 

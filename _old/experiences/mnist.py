@@ -1,12 +1,19 @@
-import teachers.omniscient_teacher as omni
-import teachers.surrogate_teacher as surro
-import teachers.imitation_teacher as immi
-import teachers.utils as utils
 import numpy as np
 import matplotlib.pyplot as plt
 import torch as th
 import sys
-import data.dataset_loader as dataset_loader
+from ..data import load_mnist
+
+from ..teachers import (
+    BaseLinear,
+    ImitationLinearTeacher,
+    ImitationDiffLinearTeacher,
+    OmniscientLinearStudent,
+    OmniscientLinearTeacher,
+    SurrogateLinearTeacher,
+    SurrogateDiffLinearTeacher,
+    SurrogateLinearStudent
+)
 
 
 def mnist_main(teacher_type):
@@ -17,7 +24,7 @@ def mnist_main(teacher_type):
 
     # Chargement des données
     mnistfile = "./data/mnist.pkl.gz"
-    train_set, valid_set, test_set = dataset_loader.load_mnist(mnistfile)
+    train_set, valid_set, test_set = load_mnist(mnistfile)
 
     X_train = np.asarray(train_set[0])
     Y_train = np.asarray(train_set[1])
@@ -50,30 +57,30 @@ def mnist_main(teacher_type):
     nb_batch = int(nb_example / batch_size)
 
     # Création de l'exemple
-    example = utils.BaseLinear(dim)
+    example = BaseLinear(dim)
 
     # Séléction du teacher et du student
     if teacher_type == "omni":
-        teacher = omni.OmniscientLinearTeacher(dim)
-        student = omni.OmniscientLinearStudent(dim)
+        teacher = OmniscientLinearTeacher(dim)
+        student = OmniscientLinearStudent(dim)
         teacher_name = "omniscient teacher"
     elif teacher_type == "surro_same":
-        teacher = surro.SurrogateLinearTeacher(dim)
-        student = surro.SurrogateLinearStudent(dim)
+        teacher = SurrogateLinearTeacher(dim)
+        student = SurrogateLinearStudent(dim)
         teacher_name = "surrogate teacher (same feature space)"
     elif teacher_type == "surro_diff":
-        teacher = surro.SurrogateDiffLinearTeacher(dim, 24, normal_dist=True)
-        student = surro.SurrogateLinearStudent(dim)
+        teacher = SurrogateDiffLinearTeacher(dim, 24, normal_dist=True)
+        student = SurrogateLinearStudent(dim)
         teacher_name = "surrogate teacher (different feature space)"
     elif teacher_type == "immi_diff":
         fst_x = th.Tensor(X[th.randint(0, X.shape[0], (1,)).item()])
-        teacher = immi.ImitationDiffLinearTeacher(dim, 24, fst_x, normal_dist=True)
-        student = utils.BaseLinear(dim)
+        teacher = ImitationDiffLinearTeacher(dim, 24, fst_x, normal_dist=True)
+        student = BaseLinear(dim)
         teacher_name = "immitation teacher (different feature space)"
     elif teacher_type == "immi_same":
         fst_x = th.Tensor(X[th.randint(0, X.shape[0], (1,)).item()])
-        teacher = immi.ImitationLinearTeacher(dim, fst_x)
-        student = utils.BaseLinear(dim)
+        teacher = ImitationLinearTeacher(dim, fst_x)
+        student = BaseLinear(dim)
         teacher_name = "immitation teacher (same feature space)"
     else:
         print("Unrecognized teacher !")

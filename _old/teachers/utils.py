@@ -1,9 +1,9 @@
-import models.neural_network as neur_net
+from ..models import LinearClassifier, ConvModel
 import torch as th
 import torch.nn as nn
 
 
-class BaseLinear(neur_net.LinearClassifier):
+class BaseLinear(LinearClassifier):
     """
     Modèle linéaire de base.
     Contient le modèle (lui-même), la fonction de perte et l'optimiseur
@@ -29,7 +29,7 @@ class BaseLinear(neur_net.LinearClassifier):
         self.optim.step()
 
 
-class BaseConv(neur_net.ConvModel):
+class BaseConv(ConvModel):
     """
     Modèle à cnvolution de base.
     Contient le modèle (lui-même), la fonction de perte, et l'optimiseur.
