@@ -31,18 +31,50 @@ def load_mnist(pickle_path: str) -> Tuple[th.Tensor, th.Tensor]:
     return x, y
 
 
-def load_gaussian(nb_gaussian: int, dim: int, nb_data_per_class: int) -> Tuple[th.Tensor, th.Tensor]:
+def load_gaussian(
+    dim: int,
+    nb_data_per_class: int
+) -> Tuple[th.Tensor, th.Tensor]:
     x = []
     y = []
 
-    for i in range(nb_gaussian):
-        multivariate_dist = th.distributions.multivariate_normal.MultivariateNormal(
-            th.rand(dim) * 2.0, th.eye(dim)
+    # First center
+    #rand_m = th.randn(dim, dim)
+    #cov = rand_m.T @ rand_m
+    cov = th.eye(dim)
+
+    mean = th.ones(dim) * 0.5
+
+    multivariate_dist = (
+        th.distributions
+        .multivariate_normal
+        .MultivariateNormal(
+            mean, cov
         )
+    )
 
-        x.append(multivariate_dist.sample((nb_data_per_class,)))
-        y.append(th.ones(nb_data_per_class, dtype=th.long) * i)
+    x.append(multivariate_dist.sample((nb_data_per_class,)))
+    y.append(th.ones(nb_data_per_class, dtype=th.long))
 
+    # Second center
+    #rand_m = th.randn(dim, dim)
+    #cov = rand_m.T @ rand_m
+    cov = th.eye(dim)
+
+    mean = -th.ones(dim) * 0.5
+
+    multivariate_dist = (
+        th.distributions
+        .multivariate_normal
+        .MultivariateNormal(
+            mean, cov
+        )
+    )
+
+    x.append(multivariate_dist.sample((nb_data_per_class,)))
+    y.append(th.zeros(nb_data_per_class, dtype=th.long))
+
+    # concat all
     x = th.cat(x, dim=0)
     y = th.cat(y, dim=0)
 
