@@ -16,7 +16,6 @@ def main() -> None:
 
     parser.add_argument(
         "--cuda",
-        type=bool,
         action="store_true",
     )
     parser.add_argument(

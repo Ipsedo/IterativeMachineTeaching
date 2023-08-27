@@ -88,23 +88,23 @@ def train(
 
     assert 0.0 < dataset_options.train_ratio < 1.0
 
-    x, y = dataset_options.x, dataset_options.y
-
-    num_features = x.size()[1]
-    num_classes = th.unique(y).size()[0]
+    num_features = dataset_options.x.size()[1]
+    num_classes = th.unique(dataset_options.y).size()[0]
 
     print(
-        f'Dataset "{dataset_options.name}" of {x.size()[0]} '
-        f"examples with {kind.value} teacher."
+        f'Dataset "{dataset_options.name}" of {dataset_options.x.size()[0]} '
+        f"examples ({num_classes} classes) with {kind.value} teacher."
     )
 
-    limit_train = int(x.size()[0] * dataset_options.train_ratio)
+    limit_train = int(
+        dataset_options.x.size()[0] * dataset_options.train_ratio
+    )
 
-    x_train = x[:limit_train, :]
-    y_train = y[:limit_train]
+    x_train = dataset_options.x[:limit_train, :]
+    y_train = dataset_options.y[:limit_train]
 
-    x_test = x[limit_train:, :]
-    y_test = y[limit_train:]
+    x_test = dataset_options.x[limit_train:, :]
+    y_test = dataset_options.y[limit_train:]
 
     # create models
     student_model = LinearClassifier(num_features, num_classes)
@@ -163,7 +163,7 @@ def train(
     x_train = x_train[:student_examples]
     y_train = y_train[:student_examples]
 
-    nb_batch = x_train.size()[0] // student_options.batch_size
+    student_batch_nb = x_train.size()[0] // student_options.batch_size
 
     # train example
     print("Train example...")
@@ -173,7 +173,9 @@ def train(
     metrics_example = []
 
     for _ in tqdm(range(student_options.steps)):
-        b_idx = batch_index_example % nb_batch
+        # if example current batch > student batch max number
+        b_idx = batch_index_example % student_batch_nb
+
         i_min = b_idx * student_options.batch_size
         i_max = (b_idx + 1) * student_options.batch_size
 
