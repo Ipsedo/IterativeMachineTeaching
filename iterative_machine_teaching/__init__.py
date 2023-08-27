@@ -1,8 +1,16 @@
-from .teachers import Teacher, OmniscientTeacher, SurrogateTeacher, ImitationTeacher
-from .students import Student, OmniscientStudent, SurrogateStudent, ImitationStudent
-
+# -*- coding: utf-8 -*-
+from .data import load_gaussian, load_mnist
 from .networks import Classifier, LinearClassifier
-
-from .train import train, TeachingType
-
-from .data import load_mnist, load_gaussian
+from .students import (
+    ImitationStudent,
+    OmniscientStudent,
+    Student,
+    SurrogateStudent,
+)
+from .teachers import (
+    ImitationTeacher,
+    OmniscientTeacher,
+    SurrogateTeacher,
+    Teacher,
+)
+from .train import TeachingType, train

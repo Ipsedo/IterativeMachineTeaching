@@ -1,17 +1,20 @@
+# -*- coding: utf-8 -*-
+import sys
+
+import matplotlib.pyplot as plt
+import numpy as np
+import torch as th
+
 from ..teachers import (
     BaseLinear,
-    ImitationLinearTeacher,
     ImitationDiffLinearTeacher,
+    ImitationLinearTeacher,
     OmniscientLinearStudent,
     OmniscientLinearTeacher,
-    SurrogateLinearTeacher,
     SurrogateDiffLinearTeacher,
-    SurrogateLinearStudent
+    SurrogateLinearStudent,
+    SurrogateLinearTeacher,
 )
-import numpy as np
-import matplotlib.pyplot as plt
-import torch as th
-import sys
 
 
 def init_data(dim, nb_data_per_class):
@@ -21,10 +24,14 @@ def init_data(dim, nb_data_per_class):
     :param nb_data_per_class: le nombre d'exemple par classe
     :return: un tuple (données, labels)
     """
-    X1 = np.random.multivariate_normal([0.5] * dim, np.identity(dim), nb_data_per_class)
+    X1 = np.random.multivariate_normal(
+        [0.5] * dim, np.identity(dim), nb_data_per_class
+    )
     y1 = np.ones((nb_data_per_class,))
 
-    X2 = np.random.multivariate_normal([-0.5] * dim, np.identity(dim), nb_data_per_class)
+    X2 = np.random.multivariate_normal(
+        [-0.5] * dim, np.identity(dim), nb_data_per_class
+    )
     y2 = np.zeros((nb_data_per_class,))
 
     X = np.concatenate((X1, X2), axis=0)
@@ -68,7 +75,9 @@ def gaussian_main(teacher_type):
         teacher_name = "immitation teacher (same feature space)"
     elif teacher_type == "immi_diff":
         fst_x = th.Tensor(X[th.randint(0, X.shape[0], (1,)).item()])
-        teacher = ImitationDiffLinearTeacher(dim, dim__diff, fst_x, normal_dist=False)
+        teacher = ImitationDiffLinearTeacher(
+            dim, dim__diff, fst_x, normal_dist=False
+        )
         student = BaseLinear(dim)
         teacher_name = "immitation teacher (different feature space)"
     else:
@@ -89,7 +98,9 @@ def gaussian_main(teacher_type):
             teacher.update(X[i_min:i_max], y[i_min:i_max])
         test = teacher(X)
         tmp = th.where(test > 0.5, th.ones(1), th.zeros(1))
-        nb_correct = th.where(tmp.view(-1) == y, th.ones(1), th.zeros(1)).sum().item()
+        nb_correct = (
+            th.where(tmp.view(-1) == y, th.ones(1), th.zeros(1)).sum().item()
+        )
         print(nb_correct, "/", 2 * nb_data_per_class)
 
     T = 500
@@ -106,7 +117,9 @@ def gaussian_main(teacher_type):
         example.update(data, label)
         test = example(X)
         tmp = th.where(test > 0.5, th.ones(1), th.zeros(1))
-        nb_correct = th.where(tmp.view(-1) == y, th.ones(1), th.zeros(1)).sum().item()
+        nb_correct = (
+            th.where(tmp.view(-1) == y, th.ones(1), th.zeros(1)).sum().item()
+        )
         res_example.append(nb_correct / (2 * nb_data_per_class))
 
     print("Base line trained\n")
@@ -124,14 +137,18 @@ def gaussian_main(teacher_type):
 
         test = student(X)
         tmp = th.where(test > 0.5, th.ones(1), th.zeros(1))
-        nb_correct = th.where(tmp.view(-1) == y, th.ones(1), th.zeros(1)).sum().item()
+        nb_correct = (
+            th.where(tmp.view(-1) == y, th.ones(1), th.zeros(1)).sum().item()
+        )
         res_student.append(nb_correct / (2 * nb_data_per_class))
 
-        sys.stdout.write("\r" + str(t) + "/" + str(T) + ", idx=" + str(i) + " " * 100)
+        sys.stdout.write(
+            "\r" + str(t) + "/" + str(T) + ", idx=" + str(i) + " " * 100
+        )
         sys.stdout.flush()
 
-    plt.plot(res_example, c='b', label="linear classifier")
-    plt.plot(res_student, c='r', label="%s & linear classifier" % teacher_name)
+    plt.plot(res_example, c="b", label="linear classifier")
+    plt.plot(res_student, c="r", label="%s & linear classifier" % teacher_name)
     plt.title("Gaussian data")
     plt.xlabel("Iteration")
     plt.ylabel("Accuracy")

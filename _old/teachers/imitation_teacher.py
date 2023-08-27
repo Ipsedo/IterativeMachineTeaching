@@ -1,7 +1,10 @@
-from .utils import BaseLinear, BaseConv
-import sys
-import torch as th
+# -*- coding: utf-8 -*-
 import copy
+import sys
+
+import torch as th
+
+from .utils import BaseConv, BaseLinear
 
 
 def __update_v__(teacher, student, x, is_same_feature_space):
@@ -36,10 +39,14 @@ def __update_v__(teacher, student, x, is_same_feature_space):
             tmp = th.matmul(x[i], teacher.proj_mat)
 
         # MAJ de l'immitation v en fonction du résultat du student
-        teacher.v.lin.weight.data = teacher.v.lin.weight.data - eta * (out_v - out_student) * tmp
+        teacher.v.lin.weight.data = (
+            teacher.v.lin.weight.data - eta * (out_v - out_student) * tmp
+        )
 
 
-def __select_example__(teacher, student, X, y, batch_size, is_same_feature_space):
+def __select_example__(
+    teacher, student, X, y, batch_size, is_same_feature_space
+):
     """
     Selectionne un exemple dans les données (X, y)
     :param teacher: Le immitation teacher devant avoir un attribut v (de classe mère du teacher)
@@ -108,10 +115,13 @@ def __select_example__(teacher, student, X, y, batch_size, is_same_feature_space
         res = teacher.v.lin.weight.grad
 
         # On calcule le score d'utilité de l'exemple
-        example_usefulness = th.dot(teacher.v.lin.weight.view(-1) - teacher.lin.weight.view(-1), res.view(-1)).item()
+        example_usefulness = th.dot(
+            teacher.v.lin.weight.view(-1) - teacher.lin.weight.view(-1),
+            res.view(-1),
+        ).item()
 
         # On calcule le score générale de l'exemple
-        s = eta ** 2 * example_difficulty - 2 * eta * example_usefulness
+        s = eta**2 * example_difficulty - 2 * eta * example_usefulness
 
         # MAJ du meilleur exemple
         if s < min_score:
@@ -119,7 +129,7 @@ def __select_example__(teacher, student, X, y, batch_size, is_same_feature_space
             arg_min = i
 
     # MAJ du précédent exemple choisi
-    teacher.x_t_moins_un = X[arg_min * batch_size:(arg_min + 1) * batch_size]
+    teacher.x_t_moins_un = X[arg_min * batch_size : (arg_min + 1) * batch_size]
 
     return arg_min
 
@@ -128,6 +138,7 @@ class ImitationLinearTeacher(BaseLinear):
     """
     Immitation teacher pour un modèle linéaire
     """
+
     def __init__(self, feature_space, fst_x):
         super(ImitationLinearTeacher, self).__init__(feature_space)
         # définition de v, le modèle que va entrainer le teacher pour immiter le student
@@ -143,8 +154,17 @@ class BaseLinearDifferentFeatureSpace(BaseLinear):
     """
     Classe pour un classifieur linéaire n'adoptant pas le même espace de feature que les données
     """
-    def __init__(self, feature_space, used_feature_space, normal_dist=True, proj_mat=None):
-        super(BaseLinearDifferentFeatureSpace, self).__init__(used_feature_space)
+
+    def __init__(
+        self,
+        feature_space,
+        used_feature_space,
+        normal_dist=True,
+        proj_mat=None,
+    ):
+        super(BaseLinearDifferentFeatureSpace, self).__init__(
+            used_feature_space
+        )
 
         # définition matrice de projection
         if proj_mat is not None:
@@ -156,7 +176,9 @@ class BaseLinearDifferentFeatureSpace(BaseLinear):
 
     def forward(self, x):
         # surcharge méthode -> projection des données
-        return super(BaseLinearDifferentFeatureSpace, self).forward(th.matmul(x, self.proj_mat))
+        return super(BaseLinearDifferentFeatureSpace, self).forward(
+            th.matmul(x, self.proj_mat)
+        )
 
 
 class ImitationDiffLinearTeacher(BaseLinearDifferentFeatureSpace):
@@ -164,11 +186,18 @@ class ImitationDiffLinearTeacher(BaseLinearDifferentFeatureSpace):
     Immitation teacher avec espace de features différent pour un modèle linéaire.
     Hérite donc de la classe BaseLinearDifferentFeatureSpace
     """
-    def __init__(self, feature_space, used_feature_space, fst_x, normal_dist=True):
-        super(ImitationDiffLinearTeacher, self).__init__(feature_space, used_feature_space, normal_dist)
+
+    def __init__(
+        self, feature_space, used_feature_space, fst_x, normal_dist=True
+    ):
+        super(ImitationDiffLinearTeacher, self).__init__(
+            feature_space, used_feature_space, normal_dist
+        )
 
         # définition de l'immitation du student
-        self.v = BaseLinearDifferentFeatureSpace(feature_space, used_feature_space, normal_dist, self.proj_mat)
+        self.v = BaseLinearDifferentFeatureSpace(
+            feature_space, used_feature_space, normal_dist, self.proj_mat
+        )
         # et du premier exemple
         self.x_t_moins_un = fst_x.view(-1, feature_space)
 
@@ -180,6 +209,7 @@ class ImmitationConvTeacher(BaseConv):
     """
     Immitation teacher pour modèle à convolution
     """
+
     def __init__(self, eta, fst_x):
         super(ImmitationConvTeacher, self).__init__(eta)
 

@@ -1,5 +1,7 @@
-from .experiences import gaussian_main, mnist_main, cifar10_main
+# -*- coding: utf-8 -*-
 import sys
+
+from .experiences import cifar10_main, gaussian_main, mnist_main
 
 
 def main() -> None:
@@ -12,5 +14,5 @@ def main() -> None:
         cifar10_main(sys.argv[2])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

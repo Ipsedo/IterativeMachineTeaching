@@ -1,5 +1,7 @@
-from .utils import *
+# -*- coding: utf-8 -*-
 import sys
+
+from .utils import *
 
 
 def __example_difficulty__(student, X, y):
@@ -73,7 +75,7 @@ def __select_example__(teacher, student, X, y, batch_size):
 
         eta = student.optim.param_groups[0]["lr"]
 
-        s = (eta ** 2) * student.example_difficulty(data, label)
+        s = (eta**2) * student.example_difficulty(data, label)
         s -= eta * 2 * student.example_usefulness(teacher, data, label)
 
         if s.item() < min_score:
@@ -87,6 +89,7 @@ class SurrogateLinearStudent(BaseLinear):
     """
     Classe pour le student du surrogate teacher (même ou différent espace de feature)
     """
+
     def example_difficulty(self, X, y):
         return __example_difficulty__(self, X, y)
 
@@ -98,6 +101,7 @@ class SurrogateLinearTeacher(BaseLinear):
     """
     Classe pour le surrogate teacher à même espace de features
     """
+
     def select_example(self, student, X, y, batch_size):
         return __select_example__(self, student, X, y, batch_size)
 
@@ -106,6 +110,7 @@ class SurrogateDiffLinearTeacher(SurrogateLinearTeacher):
     """
     Classe pour le surrogate teacher avec un espace de features différents
     """
+
     def __init__(self, feature_space, used_feature_space, normal_dist=True):
         """
         Constructeur surrogate teacher (espace feature différent)
@@ -124,13 +129,16 @@ class SurrogateDiffLinearTeacher(SurrogateLinearTeacher):
 
     def forward(self, x):
         # on surcharge la méthode forward pour appliquer le changement d'espace de features
-        return super(SurrogateLinearTeacher, self).forward(th.matmul(x, self.proj_mat))
+        return super(SurrogateLinearTeacher, self).forward(
+            th.matmul(x, self.proj_mat)
+        )
 
 
 class SurrogateConvStudent(BaseConv):
     """
     Classe pour le student du surrogate teacher pour un modèle à convolution
     """
+
     def example_difficulty(self, X, y):
         return __example_difficulty__(self, X, y)
 
@@ -142,5 +150,6 @@ class SurrogateConvTeacher(BaseConv):
     """
     Classe pour le surrogate teacher pour un modèle à convolution
     """
+
     def select_example(self, student, X, y, batch_size):
         return __select_example__(self, student, X, y, batch_size)

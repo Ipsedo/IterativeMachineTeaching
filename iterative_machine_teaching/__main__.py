@@ -1,25 +1,26 @@
+# -*- coding: utf-8 -*-
 import argparse
 
-from .data import load_mnist, load_gaussian
-from .train import train, TeachingType
+from .data import load_gaussian, load_mnist
+from .train import TeachingType, train
 
 
 def main() -> None:
     parser = argparse.ArgumentParser("IterativeMachineTeaching")
 
-    parser.add_argument(
-        "kind", type=TeachingType, choices=list(TeachingType)
-    )
+    parser.add_argument("kind", type=TeachingType, choices=list(TeachingType))
 
     parser.add_argument(
-        "-l", "--limit-train", type=int, default=-1,
-        help="Number of examples in student train dataset, negative value means max"
+        "-l",
+        "--limit-train",
+        type=int,
+        default=-1,
+        help="Number of examples in student train dataset, "
+        "negative value means max",
     )
 
     dataset_subparser = parser.add_subparsers(
-        title="dataset",
-        dest="dataset",
-        required=True
+        title="dataset", dest="dataset", required=True
     )
 
     mnist_parser = dataset_subparser.add_parser("mnist")
@@ -38,15 +39,11 @@ def main() -> None:
     elif args.dataset == "gaussian":
         dataset = load_gaussian(args.dim, args.per_class_example)
     else:
-        raise Exception("Unrecognized dataset")
+        parser.error("Unrecognized dataset")
+        return
 
-    train(
-        dataset,
-        args.dataset,
-        args.kind,
-        args.limit_train
-    )
+    train(dataset, args.dataset, args.kind, args.limit_train)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

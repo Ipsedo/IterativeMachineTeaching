@@ -1,43 +1,50 @@
-import unittest
-
+# -*- coding: utf-8 -*-
+import pytest
 import torch as th
 
 from iterative_machine_teaching.networks import LinearClassifier
 from iterative_machine_teaching.students import OmniscientStudent
 
 
-class TestStudent(unittest.TestCase):
-    def setUp(self) -> None:
-        self.__batch_size = th.randint(16, (1,))[0].item() + 1
+@pytest.mark.parametrize("batch_size", [1, 2, 4])
+@pytest.mark.parametrize("nb_class", [2, 3, 4])
+@pytest.mark.parametrize("data_size", [4, 8, 16])
+def test_example_difficulty(
+    batch_size: int, nb_class: int, data_size: int
+) -> None:
+    x = th.randn(batch_size, data_size)
+    y = th.randint(nb_class, (batch_size,))
 
-    def test_example_difficulty(self):
-        x = th.randn(self.__batch_size, 16)
-        y = th.randint(3, (self.__batch_size,))
+    model = LinearClassifier(data_size, nb_class)
+    student = OmniscientStudent(model, 1e-3)
 
-        model = LinearClassifier(16, 3)
-        student = OmniscientStudent(model, 1e-3)
+    out = student.example_difficulty(x, y)
 
-        out = student.example_difficulty(x, y)
+    assert out.size()[0] == batch_size
+    assert out.size()[0] == x.size()[0]
+    assert out.size()[0] == y.size()[0]
 
-        self.assertEqual(out.size()[0], self.__batch_size)
-        self.assertEqual(out.size()[0], x.size()[0])
-        self.assertEqual(out.size()[0], y.size()[0])
+    assert len(out.size()) == 1
 
-        self.assertEqual(len(out.size()), 1)
 
-    def test_example_usefulness(self):
-        x = th.randn(self.__batch_size, 16)
-        y = th.randint(3, (self.__batch_size,))
+@pytest.mark.parametrize("batch_size", [1, 2, 4])
+@pytest.mark.parametrize("nb_class", [2, 3, 4])
+@pytest.mark.parametrize("data_size", [4, 8, 16])
+def test_example_usefulness(
+    batch_size: int, nb_class: int, data_size: int
+) -> None:
+    x = th.randn(batch_size, data_size)
+    y = th.randint(nb_class, (batch_size,))
 
-        model = LinearClassifier(16, 3)
-        student = OmniscientStudent(model, 1e-3)
+    model = LinearClassifier(data_size, nb_class)
+    student = OmniscientStudent(model, 1e-3)
 
-        teacher = LinearClassifier(16, 3)
+    teacher = LinearClassifier(data_size, nb_class)
 
-        out = student.example_usefulness(teacher, x, y)
+    out = student.example_usefulness(teacher, x, y)
 
-        self.assertEqual(out.size()[0], self.__batch_size)
-        self.assertEqual(out.size()[0], x.size()[0])
-        self.assertEqual(out.size()[0], y.size()[0])
+    assert out.size()[0] == batch_size
+    assert out.size()[0] == x.size()[0]
+    assert out.size()[0] == y.size()[0]
 
-        self.assertEqual(len(out.size()), 1)
+    assert len(out.size()) == 1

@@ -1,15 +1,20 @@
-from .imitation_teacher import ImmitationConvTeacher, ImitationLinearTeacher, ImitationDiffLinearTeacher
+# -*- coding: utf-8 -*-
+from .imitation_teacher import (
+    ImitationDiffLinearTeacher,
+    ImitationLinearTeacher,
+    ImmitationConvTeacher,
+)
 from .omniscient_teacher import (
-    OmniscientConvTeacher,
     OmniscientConvStudent,
+    OmniscientConvTeacher,
     OmniscientLinearStudent,
-    OmniscientLinearTeacher
+    OmniscientLinearTeacher,
 )
 from .surrogate_teacher import (
-    SurrogateConvTeacher,
     SurrogateConvStudent,
-    SurrogateLinearTeacher,
+    SurrogateConvTeacher,
     SurrogateDiffLinearTeacher,
-    SurrogateLinearStudent
+    SurrogateLinearStudent,
+    SurrogateLinearTeacher,
 )
-from .utils import BaseLinear, BaseConv
+from .utils import BaseConv, BaseLinear
