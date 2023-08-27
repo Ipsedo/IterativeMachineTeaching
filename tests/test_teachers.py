@@ -1,72 +1,97 @@
-import unittest
-from typing import Tuple
+# -*- coding: utf-8 -*-
 
+import pytest
 import torch as th
 
 from iterative_machine_teaching.networks import LinearClassifier
-from iterative_machine_teaching.teachers import Teacher, OmniscientTeacher, SurrogateTeacher, ImitationTeacher
-from iterative_machine_teaching.students import Student, OmniscientStudent, SurrogateStudent, ImitationStudent
+from iterative_machine_teaching.students import (
+    ImitationStudent,
+    OmniscientStudent,
+    SurrogateStudent,
+)
+from iterative_machine_teaching.teachers import (
+    ImitationTeacher,
+    OmniscientTeacher,
+    SurrogateTeacher,
+)
 
 
-class TestTeacher(unittest.TestCase):
-    def setUp(self) -> None:
-        self.__top_n = th.randint(16, (1,))[0].item() + 1
-        self.__batch_size = th.randint(16, (1,))[0].item() + self.__top_n
-        self.__nb_example = self.__batch_size + th.randint(256, (1,))[0].item()
+@pytest.mark.parametrize("data_size", [4, 8, 16])
+@pytest.mark.parametrize("nb_class", [2, 3, 4])
+@pytest.mark.parametrize("nb_example", [16, 32, 64])
+@pytest.mark.parametrize("batch_size", [1, 2, 4])
+@pytest.mark.parametrize("top_n", [2, 4, 8])
+def test_omniscient_select_n_example(
+    data_size: int, nb_class: int, nb_example: int, batch_size: int, top_n: int
+) -> None:
+    x = th.randn(nb_example, data_size)
+    y = th.randint(nb_class, (nb_example,))
 
-    def __compute_select_n_example(
-            self,
-            teacher: Teacher,
-            student: Student,
-            x: th.Tensor,
-            y: th.Tensor
-    ) -> Tuple[th.Tensor, th.Tensor]:
-        return teacher.select_n_examples(student, x, y, self.__top_n)
+    s_model = LinearClassifier(data_size, nb_class)
+    student = OmniscientStudent(s_model, 1e-3)
 
-    def __check_dim(self, top_data: th.Tensor, top_label: th.Tensor, x: th.Tensor):
-        self.assertEqual(top_data.size()[0], self.__top_n)
-        self.assertEqual(top_label.size()[0], self.__top_n)
+    t_model = LinearClassifier(data_size, nb_class)
+    teacher = OmniscientTeacher(t_model, 1e-3, batch_size)
 
-        self.assertEqual(top_data.size()[1], x.size()[1])
+    top_data, top_label = teacher.select_n_examples(student, x, y, top_n)
 
-    def test_omniscient_select_n_example(self):
-        x = th.randn(self.__nb_example, 16)
-        y = th.randint(3, (self.__nb_example,))
+    assert top_data.size()[0] == top_n
+    assert top_label.size()[0] == top_n
 
-        s_model = LinearClassifier(16, 3)
-        student = OmniscientStudent(s_model, 1e-3)
+    assert top_data.size(1) == data_size
+    assert top_data.size()[1] == x.size()[1]
+    assert len(top_data.size()) == 2
 
-        t_model = LinearClassifier(16, 3)
-        teacher = OmniscientTeacher(t_model, 1e-3, self.__batch_size)
 
-        top_data, top_label = self.__compute_select_n_example(teacher, student, x, y)
+@pytest.mark.parametrize("data_size", [4, 8, 16])
+@pytest.mark.parametrize("nb_class", [2, 3, 4])
+@pytest.mark.parametrize("nb_example", [16, 32, 64])
+@pytest.mark.parametrize("batch_size", [1, 2, 4])
+@pytest.mark.parametrize("top_n", [2, 4, 8])
+def test_surrogate_select_n_example(
+    data_size: int, nb_class: int, nb_example: int, batch_size: int, top_n: int
+) -> None:
+    x = th.randn(nb_example, data_size)
+    y = th.randint(nb_class, (nb_example,))
 
-        self.__check_dim(top_data, top_label, x)
+    s_model = LinearClassifier(data_size, nb_class)
+    student = SurrogateStudent(s_model, 1e-3)
 
-    def test_surrogate_select_n_example(self):
-        x = th.randn(self.__nb_example, 16)
-        y = th.randint(3, (self.__nb_example,))
+    t_model = LinearClassifier(data_size, nb_class)
+    teacher = SurrogateTeacher(t_model, 1e-3, batch_size)
 
-        s_model = LinearClassifier(16, 3)
-        student = SurrogateStudent(s_model, 1e-3)
+    top_data, top_label = teacher.select_n_examples(student, x, y, top_n)
 
-        t_model = LinearClassifier(16, 3)
-        teacher = SurrogateTeacher(t_model, 1e-3, self.__batch_size)
+    assert top_data.size()[0] == top_n
+    assert top_label.size()[0] == top_n
 
-        top_data, top_label = self.__compute_select_n_example(teacher, student, x, y)
+    assert top_data.size(1) == data_size
+    assert top_data.size()[1] == x.size()[1]
+    assert len(top_data.size()) == 2
 
-        self.__check_dim(top_data, top_label, x)
 
-    def test_imitation_select_n_example(self):
-        x = th.randn(self.__nb_example, 16)
-        y = th.randint(3, (self.__nb_example,))
+@pytest.mark.parametrize("data_size", [4, 8, 16])
+@pytest.mark.parametrize("nb_class", [2, 3, 4])
+@pytest.mark.parametrize("nb_example", [16, 32, 64])
+@pytest.mark.parametrize("batch_size", [2, 4])
+@pytest.mark.parametrize("top_n", [2, 4, 8])
+def test_imitation_select_n_example(
+    data_size: int, nb_class: int, nb_example: int, batch_size: int, top_n: int
+) -> None:
+    x = th.randn(nb_example, data_size)
+    y = th.randint(nb_class, (nb_example,))
 
-        s_model = LinearClassifier(16, 3)
-        student = ImitationStudent(s_model, 1e-3)
+    s_model = LinearClassifier(data_size, nb_class)
+    student = ImitationStudent(s_model, 1e-3)
 
-        t_model = LinearClassifier(16, 3)
-        teacher = ImitationTeacher(t_model, 1e-3, self.__batch_size)
+    t_model = LinearClassifier(data_size, nb_class)
+    teacher = ImitationTeacher(t_model, 1e-3, batch_size)
 
-        top_data, top_label = self.__compute_select_n_example(teacher, student, x, y)
+    top_data, top_label = teacher.select_n_examples(student, x, y, top_n)
 
-        self.__check_dim(top_data, top_label, x)
+    assert top_data.size()[0] == top_n
+    assert top_label.size()[0] == top_n
+
+    assert top_data.size(1) == data_size
+    assert top_data.size()[1] == x.size()[1]
+    assert len(top_data.size()) == 2

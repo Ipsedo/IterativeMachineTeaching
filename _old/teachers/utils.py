@@ -1,6 +1,8 @@
-from ..models import LinearClassifier, ConvModel
+# -*- coding: utf-8 -*-
 import torch as th
 import torch.nn as nn
+
+from ..models import ConvModel, LinearClassifier
 
 
 class BaseLinear(LinearClassifier):
@@ -8,6 +10,7 @@ class BaseLinear(LinearClassifier):
     Modèle linéaire de base.
     Contient le modèle (lui-même), la fonction de perte et l'optimiseur
     """
+
     def __init__(self, n_in):
         super(BaseLinear, self).__init__(n_in)
         self.loss_fn = nn.MSELoss()
@@ -34,6 +37,7 @@ class BaseConv(ConvModel):
     Modèle à cnvolution de base.
     Contient le modèle (lui-même), la fonction de perte, et l'optimiseur.
     """
+
     def __init__(self, eta):
         super(BaseConv, self).__init__()
         self.loss_fn = nn.MSELoss()

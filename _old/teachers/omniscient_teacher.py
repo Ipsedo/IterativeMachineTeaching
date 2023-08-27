@@ -1,6 +1,9 @@
-from .utils import BaseLinear, BaseConv
-import torch as th
+# -*- coding: utf-8 -*-
 import sys
+
+import torch as th
+
+from .utils import BaseConv, BaseLinear
 
 
 def __example_difficulty__(student, X, y):
@@ -107,8 +110,12 @@ def __select_example__(teacher, student, X, y, batch_size):
         eta = student.optim.param_groups[0]["lr"]
 
         # Caclul du score du batch
-        s = (eta ** 2) * student.example_difficulty(data, label)
-        s -= eta * 2 * student.example_usefulness(teacher.lin.weight, data, label)
+        s = (eta**2) * student.example_difficulty(data, label)
+        s -= (
+            eta
+            * 2
+            * student.example_usefulness(teacher.lin.weight, data, label)
+        )
 
         # MAJ du meilleur score (ie le plus petit score)
         if s < min_score:
@@ -124,6 +131,7 @@ class OmniscientLinearStudent(BaseLinear):
     Classification linéaire
     Marche de paire avec OmniscientLinearTeacher
     """
+
     def example_difficulty(self, X, y):
         return __example_difficulty__(self, X, y)
 
@@ -137,6 +145,7 @@ class OmniscientConvStudent(BaseConv):
     Modèle à convolution.
     Marche de paire avec OmniscientConvTeacher
     """
+
     def example_difficulty(self, X, y):
         return __example_difficulty__(self, X, y)
 
@@ -149,6 +158,7 @@ class OmniscientLinearTeacher(BaseLinear):
     Omniscient teacher.
     Pour un classifieur linéaire de classe OmniscientLinearStudent
     """
+
     def select_example(self, student, X, y, batch_size):
         return __select_example__(self, student, X, y, batch_size)
 
@@ -158,5 +168,6 @@ class OmniscientConvTeacher(BaseConv):
     Omnsicient teacher
     Pour un classifieur à convolution de classe OmniscientConvStudent
     """
+
     def select_example(self, student, X, y, batch_size):
         return __select_example__(self, student, X, y, batch_size)

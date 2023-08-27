@@ -1,18 +1,20 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import torch as th
+# -*- coding: utf-8 -*-
 import sys
-from ..data import load_mnist
 
+import matplotlib.pyplot as plt
+import numpy as np
+import torch as th
+
+from ..data import load_mnist
 from ..teachers import (
     BaseLinear,
-    ImitationLinearTeacher,
     ImitationDiffLinearTeacher,
+    ImitationLinearTeacher,
     OmniscientLinearStudent,
     OmniscientLinearTeacher,
-    SurrogateLinearTeacher,
     SurrogateDiffLinearTeacher,
-    SurrogateLinearStudent
+    SurrogateLinearStudent,
+    SurrogateLinearTeacher,
 )
 
 
@@ -41,8 +43,8 @@ def mnist_main(teacher_type):
     y = np.where(y == class_1, 0, 1)
 
     # On prend le bon nombre de données
-    X = X[:nb_example + nb_test]
-    y = y[:nb_example + nb_test]
+    X = X[: nb_example + nb_test]
+    y = y[: nb_example + nb_test]
 
     # Shuffle des données
     randomize = np.arange(X.shape[0])
@@ -89,8 +91,8 @@ def mnist_main(teacher_type):
     # Passage des données vers pytorch
     X_train = th.Tensor(X[:nb_example])
     y_train = th.Tensor(y[:nb_example]).view(-1)
-    X_test = th.Tensor(X[nb_example:nb_example + nb_test])
-    y_test = th.Tensor(y[nb_example:nb_example + nb_test])
+    X_test = th.Tensor(X[nb_example : nb_example + nb_test])
+    y_test = th.Tensor(y[nb_example : nb_example + nb_test])
 
     # Entrainement du teacher
     for e in range(30):
@@ -100,7 +102,11 @@ def mnist_main(teacher_type):
             teacher.update(X_train[i_min:i_max], y_train[i_min:i_max])
         test = teacher(X_test)
         tmp = th.where(test > 0.5, th.ones(1), th.zeros(1))
-        nb_correct = th.where(tmp.view(-1) == y_test, th.ones(1), th.zeros(1)).sum().item()
+        nb_correct = (
+            th.where(tmp.view(-1) == y_test, th.ones(1), th.zeros(1))
+            .sum()
+            .item()
+        )
         print(nb_correct, "/", X_test.size(0))
 
     T = 300
@@ -117,7 +123,11 @@ def mnist_main(teacher_type):
         example.update(data, label)
         test = example(X_test)
         tmp = th.where(test > 0.5, th.ones(1), th.zeros(1))
-        nb_correct = th.where(tmp.view(-1) == y_test, th.ones(1), th.zeros(1)).sum().item()
+        nb_correct = (
+            th.where(tmp.view(-1) == y_test, th.ones(1), th.zeros(1))
+            .sum()
+            .item()
+        )
         res_example.append(nb_correct / X_test.size(0))
 
     print("Base line trained\n")
@@ -137,15 +147,27 @@ def mnist_main(teacher_type):
 
         test = student(X_test)
         tmp = th.where(test > 0.5, th.ones(1), th.zeros(1))
-        nb_correct = th.where(tmp.view(-1) == y_test, th.ones(1), th.zeros(1)).sum().item()
+        nb_correct = (
+            th.where(tmp.view(-1) == y_test, th.ones(1), th.zeros(1))
+            .sum()
+            .item()
+        )
         res_student.append(nb_correct / X_test.size(0))
 
-        sys.stdout.write("\r" + str(t) + "/" + str(T) + ", idx=" + str(i) + " " * 100)
+        sys.stdout.write(
+            "\r" + str(t) + "/" + str(T) + ", idx=" + str(i) + " " * 100
+        )
         sys.stdout.flush()
 
-    plt.plot(res_example, c='b', label="linear classifier")
-    plt.plot(res_student, c='r', label="%s & linear classifier" % teacher_name)
-    plt.title("MNIST Linear model (class : " + str(class_1) + ", " + str(class_2) + ")")
+    plt.plot(res_example, c="b", label="linear classifier")
+    plt.plot(res_student, c="r", label="%s & linear classifier" % teacher_name)
+    plt.title(
+        "MNIST Linear model (class : "
+        + str(class_1)
+        + ", "
+        + str(class_2)
+        + ")"
+    )
     plt.xlabel("Iteration")
     plt.ylabel("Accuracy")
     plt.legend()

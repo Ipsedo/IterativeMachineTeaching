@@ -4,3 +4,9 @@ matplotlib
 tqdm
 numpy
 jupyter
+
+# pre-commit
+pre-commit
+mypy
+pylint
+pytest

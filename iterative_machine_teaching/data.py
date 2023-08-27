@@ -1,14 +1,14 @@
-from typing import Tuple
-
+# -*- coding: utf-8 -*-
 import gzip
 import pickle
+from typing import Tuple
 
 import torch as th
 
 
 def load_mnist(pickle_path: str) -> Tuple[th.Tensor, th.Tensor]:
-    f = gzip.open(pickle_path, 'rb')
-    train_set, valid_set, test_set = pickle.load(f, encoding='latin-1')
+    f = gzip.open(pickle_path, "rb")
+    train_set, valid_set, test_set = pickle.load(f, encoding="latin-1")
     f.close()
 
     train_x = th.from_numpy(train_set[0])
@@ -32,55 +32,48 @@ def load_mnist(pickle_path: str) -> Tuple[th.Tensor, th.Tensor]:
 
 
 def load_gaussian(
-    dim: int,
-    nb_data_per_class: int
+    dim: int, nb_data_per_class: int
 ) -> Tuple[th.Tensor, th.Tensor]:
     x = []
     y = []
 
+    size = th.Size([nb_data_per_class])
+
     # First center
-    #rand_m = th.randn(dim, dim)
-    #cov = rand_m.T @ rand_m
+    # rand_m = th.randn(dim, dim)
+    # cov = rand_m.T @ rand_m
     cov = th.eye(dim)
 
     mean = th.ones(dim) * 0.5
 
     multivariate_dist = (
-        th.distributions
-        .multivariate_normal
-        .MultivariateNormal(
-            mean, cov
-        )
+        th.distributions.multivariate_normal.MultivariateNormal(mean, cov)
     )
 
-    x.append(multivariate_dist.sample((nb_data_per_class,)))
+    x.append(multivariate_dist.sample(size))
     y.append(th.ones(nb_data_per_class, dtype=th.long))
 
     # Second center
-    #rand_m = th.randn(dim, dim)
-    #cov = rand_m.T @ rand_m
+    # rand_m = th.randn(dim, dim)
+    # cov = rand_m.T @ rand_m
     cov = th.eye(dim)
 
     mean = -th.ones(dim) * 0.5
 
     multivariate_dist = (
-        th.distributions
-        .multivariate_normal
-        .MultivariateNormal(
-            mean, cov
-        )
+        th.distributions.multivariate_normal.MultivariateNormal(mean, cov)
     )
 
-    x.append(multivariate_dist.sample((nb_data_per_class,)))
+    x.append(multivariate_dist.sample(size))
     y.append(th.zeros(nb_data_per_class, dtype=th.long))
 
     # concat all
-    x = th.cat(x, dim=0)
-    y = th.cat(y, dim=0)
+    x_tensor = th.cat(x, dim=0)
+    y_tensor = th.cat(y, dim=0)
 
-    rand_perm = th.randperm(x.size()[0])
+    rand_perm = th.randperm(x_tensor.size()[0])
 
-    x = th.index_select(x, 0, rand_perm)
-    y = th.index_select(y, 0, rand_perm)
+    x_tensor = th.index_select(x_tensor, 0, rand_perm)
+    y_tensor = th.index_select(y_tensor, 0, rand_perm)
 
-    return x, y
+    return x_tensor, y_tensor

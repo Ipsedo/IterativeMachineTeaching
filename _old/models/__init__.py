@@ -1,1 +1,2 @@
-from .neural_network import LinearClassifier, ConvModel
+# -*- coding: utf-8 -*-
+from .neural_network import ConvModel, LinearClassifier

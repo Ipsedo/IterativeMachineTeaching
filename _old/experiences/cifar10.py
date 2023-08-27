@@ -1,19 +1,21 @@
-import matplotlib.pyplot as plt
-from ..teachers import (
-    ImmitationConvTeacher,
-    OmniscientConvTeacher,
-    SurrogateConvTeacher,
+# -*- coding: utf-8 -*-
+import copy
+import sys
 
-    SurrogateConvStudent,
-    OmniscientConvStudent,
-    BaseConv
-)
-from ..data import load_cifar10_2, cifar10_proper_array
+import matplotlib.pyplot as plt
 import numpy as np
 import torch as th
-import sys
 from tqdm import tqdm
-import copy
+
+from ..data import cifar10_proper_array, load_cifar10_2
+from ..teachers import (
+    BaseConv,
+    ImmitationConvTeacher,
+    OmniscientConvStudent,
+    OmniscientConvTeacher,
+    SurrogateConvStudent,
+    SurrogateConvTeacher,
+)
 
 
 def cifar10_main(teacher_type):
@@ -36,7 +38,7 @@ def cifar10_main(teacher_type):
     data = cifar10_proper_array(data)
 
     # séléction du bon nombre de données
-    data, labels = data[:nb_example + nb_test], labels[:nb_example + nb_test]
+    data, labels = data[: nb_example + nb_test], labels[: nb_example + nb_test]
 
     # Changement de label et 0 | 1
     labels = np.where(labels == class_1, 0, 1)
@@ -63,7 +65,11 @@ def cifar10_main(teacher_type):
         print("Unsuported teacher for CIFAR-10 (%s) !" % teacher_type)
         sys.exit()
     elif teacher_type == "immi_same":
-        fst_x = th.Tensor(data[th.randint(0, data.shape[0], (1,)).item()]).unsqueeze(0).cuda()
+        fst_x = (
+            th.Tensor(data[th.randint(0, data.shape[0], (1,)).item()])
+            .unsqueeze(0)
+            .cuda()
+        )
         teacher = ImmitationConvTeacher(eta, fst_x)
         teacher_name = "immitation teacher (same feature space)"
     elif teacher_type == "immi_diff":
@@ -76,8 +82,8 @@ def cifar10_main(teacher_type):
     # Passage des données sous pytorch
     X = th.Tensor(data[:nb_example])
     y = th.Tensor(labels[:nb_example]).view(-1)
-    X_test = th.Tensor(data[nb_example:nb_example + nb_test])
-    y_test = th.Tensor(labels[nb_example:nb_example + nb_test]).view(-1)
+    X_test = th.Tensor(data[nb_example : nb_example + nb_test])
+    y_test = th.Tensor(labels[nb_example : nb_example + nb_test]).view(-1)
     print(X_test.size())
     sys.stdout.flush()
 
@@ -95,7 +101,11 @@ def cifar10_main(teacher_type):
         teacher.eval()
         test = teacher(X_test.cuda()).cpu()
         tmp = th.where(test > 0.5, th.ones(1), th.zeros(1))
-        nb_correct = th.where(tmp.view(-1) == y_test, th.ones(1), th.zeros(1)).sum().item()
+        nb_correct = (
+            th.where(tmp.view(-1) == y_test, th.ones(1), th.zeros(1))
+            .sum()
+            .item()
+        )
         accuracies.append(nb_correct / X_test.size(0))
 
     plt.plot(accuracies, c="b", label="Teacher (CNN)")
@@ -138,8 +148,8 @@ def cifar10_main(teacher_type):
     nb_example = 200
     X = th.Tensor(data[:nb_example])
     y = th.Tensor(labels[:nb_example]).view(-1)
-    X_test = th.Tensor(data[nb_example:nb_example + nb_test])
-    y_test = th.Tensor(labels[nb_example:nb_example + nb_test]).view(-1)
+    X_test = th.Tensor(data[nb_example : nb_example + nb_test])
+    y_test = th.Tensor(labels[nb_example : nb_example + nb_test]).view(-1)
 
     batch_size = 1
     nb_batch = int(nb_example / batch_size)
@@ -159,7 +169,11 @@ def cifar10_main(teacher_type):
 
         test = example(X_test.cuda()).cpu()
         tmp = th.where(test > 0.5, th.ones(1), th.zeros(1))
-        nb_correct = th.where(tmp.view(-1) == y_test, th.ones(1), th.zeros(1)).sum().item()
+        nb_correct = (
+            th.where(tmp.view(-1) == y_test, th.ones(1), th.zeros(1))
+            .sum()
+            .item()
+        )
         res_example.append(nb_correct / X_test.size(0))
 
     print("Base line trained\n")
@@ -181,15 +195,21 @@ def cifar10_main(teacher_type):
         student.eval()
         test = student(X_test.cuda()).cpu()
         tmp = th.where(test > 0.5, th.ones(1), th.zeros(1))
-        nb_correct = th.where(tmp.view(-1) == y_test, th.ones(1), th.zeros(1)).sum().item()
+        nb_correct = (
+            th.where(tmp.view(-1) == y_test, th.ones(1), th.zeros(1))
+            .sum()
+            .item()
+        )
         res_student.append(nb_correct / X_test.size(0))
 
-        sys.stdout.write("\r" + str(t) + "/" + str(T) + ", idx=" + str(i) + " " * 10)
+        sys.stdout.write(
+            "\r" + str(t) + "/" + str(T) + ", idx=" + str(i) + " " * 10
+        )
         sys.stdout.flush()
 
     d = data_loader.cifar10_dictclass()
-    plt.plot(res_example, c='b', label="CNN")
-    plt.plot(res_student, c='r', label="%s & CNN" % teacher_name)
+    plt.plot(res_example, c="b", label="CNN")
+    plt.plot(res_student, c="r", label="%s & CNN" % teacher_name)
     plt.title("Cifar10 CNN (class : " + d[class_1] + ", " + d[class_2] + ")")
     plt.xlabel("Iteration")
     plt.ylabel("Accuracy")
