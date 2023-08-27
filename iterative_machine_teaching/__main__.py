@@ -14,9 +14,21 @@ from .train import (
 def main() -> None:
     parser = argparse.ArgumentParser("IterativeMachineTeaching")
 
-    parser.add_argument("--cuda", type=bool, action="store_true")
-    parser.add_argument("kind", type=TeachingType, choices=list(TeachingType))
-    parser.add_argument("--train-ratio", type=float, default=4.0 / 5.0)
+    parser.add_argument(
+        "--cuda",
+        type=bool,
+        action="store_true",
+    )
+    parser.add_argument(
+        "kind",
+        type=TeachingType,
+        choices=list(TeachingType),
+    )
+    parser.add_argument(
+        "--train-ratio",
+        type=float,
+        default=4.0 / 5.0,
+    )
 
     # student / example options
     parser.add_argument(
@@ -47,10 +59,16 @@ def main() -> None:
 
     # teacher options
     parser.add_argument(
-        "--teacher-lr", type=float, default=1e-3, help="Teacher learning rate"
+        "--teacher-lr",
+        type=float,
+        default=1e-3,
+        help="Teacher learning rate",
     )
     parser.add_argument(
-        "--teacher-batch-size", type=int, default=8, help="Teacher batch size"
+        "--teacher-batch-size",
+        type=int,
+        default=8,
+        help="Teacher batch size",
     )
     parser.add_argument(
         "--research-batch-size",
@@ -66,16 +84,29 @@ def main() -> None:
     )
 
     dataset_subparser = parser.add_subparsers(
-        title="dataset", dest="dataset", required=True
+        title="dataset",
+        dest="dataset",
+        required=True,
     )
 
     mnist_parser = dataset_subparser.add_parser("mnist")
-    mnist_parser.add_argument("input_pickle", type=str)
+    mnist_parser.add_argument(
+        "input_pickle",
+        type=str,
+    )
 
     gaussian_parser = dataset_subparser.add_parser("gaussian")
-    gaussian_parser.add_argument("-d", "--dim", type=int, default=8)
     gaussian_parser.add_argument(
-        "-n", "--per-class-example", type=int, default=512
+        "-d",
+        "--dim",
+        type=int,
+        default=8,
+    )
+    gaussian_parser.add_argument(
+        "-n",
+        "--per-class-example",
+        type=int,
+        default=512,
     )
 
     args = parser.parse_args()
