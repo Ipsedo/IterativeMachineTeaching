@@ -13,4 +13,10 @@ from .teachers import (
     SurrogateTeacher,
     Teacher,
 )
-from .train import TeachingType, train
+from .train import (
+    DatasetOptions,
+    StudentOptions,
+    TeacherOptions,
+    TeachingType,
+    train,
+)
